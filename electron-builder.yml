@@ -1,0 +1,58 @@
+appId: com.sketchide.app
+productName: SketchIDE
+copyright: Copyright © 2024
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+  - node_modules/**/*
+
+win:
+  target:
+    - target: dir
+      arch:
+        - x64
+    - target: nsis
+      arch:
+        - x64
+  icon: public/logo.png
+  requestedExecutionLevel: asInvoker
+  # Completely disable code signing to avoid Windows permission issues
+  sign: null
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: build/icon.icns
+  category: public.app-category.developer-tools
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: build/icon.png
+  category: Development
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  displayLanguageSelector: false
+  # Don't run the app after installation
+  runAfterFinish: false
+  # Uninstaller settings
+  uninstallDisplayName: SketchIDE
+  deleteAppDataOnUninstall: false
+  # Don't try to close running instances (allows installation if app is running)
+  perMachine: false

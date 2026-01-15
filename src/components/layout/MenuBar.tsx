@@ -54,6 +54,20 @@ export const MenuBar: React.FC<MenuBarProps> = ({
 
   return (
     <div className="bg-[#323233] border-b border-ide-border px-2 py-1 flex items-center gap-1">
+      {/* Logo */}
+      <div className="flex items-center gap-2 px-2 mr-1">
+        <img 
+          src="./logo.png" 
+          alt="SketchIDE" 
+          className="h-6 w-6 object-contain"
+          onError={(e) => {
+            // Fallback if logo doesn't load
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+        <span className="text-sm font-semibold text-ide-text">SketchIDE</span>
+      </div>
+      
       {menus.map((menu) => (
         <div key={menu.id} className="relative">
           <button
@@ -96,7 +110,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       <div className="flex-1" />
 
       <div className="text-xs text-ide-textDim px-3">
-        CodeCanvas v1.0
+        v1.0.0
       </div>
     </div>
   );

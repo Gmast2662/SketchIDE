@@ -1,14 +1,24 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "sketchide",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
+  "description": "SketchIDE - A beginner-friendly coding environment",
+  "author": "Your Name",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
+    "electron:build:portable": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --config.win.target=dir --config.win.sign=null",
+    "electron:install": "powershell -ExecutionPolicy Bypass -File create-installer.ps1",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -104,6 +114,8 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
   }
 }

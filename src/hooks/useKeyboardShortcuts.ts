@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 interface Shortcuts {
   'Ctrl+R'?: () => void;
   'Ctrl+S'?: () => void;
+  'Ctrl+Shift+S'?: () => void;
   'Ctrl+N'?: () => void;
   'Ctrl+Shift+C'?: () => void;
   'Ctrl+O'?: () => void;
@@ -19,6 +20,9 @@ export const useKeyboardShortcuts = (shortcuts: Shortcuts) => {
       if (isCtrl && e.key === 'r') {
         e.preventDefault();
         shortcuts['Ctrl+R']?.();
+      } else if (isCtrl && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        shortcuts['Ctrl+Shift+S']?.();
       } else if (isCtrl && e.key === 's') {
         e.preventDefault();
         shortcuts['Ctrl+S']?.();

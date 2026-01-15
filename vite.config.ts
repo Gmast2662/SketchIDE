@@ -16,4 +16,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: './', // Important for Electron - use relative paths
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version || '1.0.0'),
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // Ensure proper paths for Electron
+    rollupOptions: {
+      output: {
+        format: 'es',
+      },
+    },
+  },
 });

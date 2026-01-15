@@ -666,6 +666,8 @@ export class CodeInterpreter {
         'getMouseClicked',
         'getKeyPressed',
         'getKey',
+        'getKeyClicked',
+        'getClickedKey',
         'isKeyPressed',
         'isLeftMouse',
         'isRightMouse',
@@ -723,7 +725,7 @@ export class CodeInterpreter {
           
           return code;
         })() +
-        '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { await setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? (async function loopWrapper() { await loop(); }) : null;'
+        '\n\nreturn (async function() { if (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { await setupResult.catch(err => { throw err; }); } } return typeof loop === "function" ? (async function loopWrapper() { await loop(); }) : null; })();'
       );
 
       // Run the code and get loop function if defined
@@ -773,8 +775,8 @@ export class CodeInterpreter {
         () => mouseClicked,
         () => keyPressed,
         () => currentKey,
-        keyClicked: () => keyClicked,
-        clickedKey: () => clickedKey,
+        () => keyClicked,
+        () => clickedKey,
         isKeyPressed,
         isLeftMouse,
         isRightMouse,

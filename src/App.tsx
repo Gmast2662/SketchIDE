@@ -287,26 +287,69 @@ function App() {
     }
   }, [handleStop, handleClearConsole]);
 
-  // Save project
-  const handleSaveProject = useCallback(() => {
-    const name = prompt(
-      'Enter project name:',
-      currentProject?.name || 'Untitled Project'
-    );
-    if (!name) return;
+  // Save project (Ctrl+S - saves existing or prompts for name if new)
+  const handleSaveProject = useCallback(async () => {
+    let projectName = currentProject?.name;
+    
+    // If no project name exists, prompt for it
+    if (!projectName) {
+      projectName = prompt(
+        'Enter project name:',
+        'Untitled Project'
+      );
+      if (!projectName) return;
+    }
 
     const project: Project = {
       id: currentProject?.id || Date.now().toString(),
-      name,
+      name: projectName,
       code,
       createdAt: currentProject?.createdAt || Date.now(),
       updatedAt: Date.now(),
     };
 
+    // Save to both localStorage and sketchbook folder (if Electron)
     storage.saveProject(project);
     storage.setCurrentProjectId(project.id);
     setCurrentProject(project);
-    addConsoleMessage(`Project "${name}" saved successfully`, 'success');
+    
+    // Also save to sketchbook folder in Electron
+    const savedToSketchbook = await storage.saveSketch(projectName, code);
+    if (savedToSketchbook) {
+      addConsoleMessage(`Project "${projectName}" saved to sketchbook folder`, 'success');
+    } else {
+      addConsoleMessage(`Project "${projectName}" saved successfully`, 'success');
+    }
+  }, [code, currentProject, addConsoleMessage]);
+
+  // Save As project (Shift+Ctrl+S - always prompts for new name)
+  const handleSaveAsProject = useCallback(async () => {
+    const projectName = prompt(
+      'Enter project name:',
+      currentProject?.name || 'Untitled Project'
+    );
+    if (!projectName) return;
+
+    const project: Project = {
+      id: Date.now().toString(), // New ID for save as
+      name: projectName,
+      code,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // Save to both localStorage and sketchbook folder (if Electron)
+    storage.saveProject(project);
+    storage.setCurrentProjectId(project.id);
+    setCurrentProject(project);
+    
+    // Also save to sketchbook folder in Electron
+    const savedToSketchbook = await storage.saveSketch(projectName, code);
+    if (savedToSketchbook) {
+      addConsoleMessage(`Project "${projectName}" saved to sketchbook folder`, 'success');
+    } else {
+      addConsoleMessage(`Project "${projectName}" saved successfully`, 'success');
+    }
   }, [code, currentProject, addConsoleMessage]);
 
   // Open project
@@ -414,6 +457,7 @@ function App() {
   useKeyboardShortcuts({
     'Ctrl+R': handleRun,
     'Ctrl+S': handleSaveProject,
+    'Ctrl+Shift+S': handleSaveAsProject,
     'Ctrl+N': handleNewProject,
     'Ctrl+Shift+C': handleClearConsole,
     'Ctrl+O': handleOpenProject,
