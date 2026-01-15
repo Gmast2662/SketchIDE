@@ -1,7 +1,7 @@
 {
   "name": "SketchIDE",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "SketchIDE - A beginner-friendly coding environment",
