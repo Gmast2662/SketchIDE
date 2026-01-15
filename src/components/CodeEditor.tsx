@@ -7,6 +7,7 @@ interface CodeEditorProps {
   onChange: (value: string) => void;
   readOnly?: boolean;
   errorLine?: number | null;
+  onCursorChange?: (position: { line: number; col: number }) => void;
 }
 
 const highlightSyntax = (
@@ -36,12 +37,12 @@ const highlightSyntax = (
   const strings = /(["'])((?:\\.|(?!\1).)*?)\1/g;
 
   // Process strings first (they can contain slashes that might look like comments)
-  highlighted = highlighted.replace(strings, '<span style="color: #CE9178">$&</span>');
+  highlighted = highlighted.replace(strings, '<span style="color: #008000">$&</span>');
   
-  // Then process other syntax
-  highlighted = highlighted.replace(functions, '<span style="color: #DCDCAA">$&</span>');
-  highlighted = highlighted.replace(keywords, '<span style="color: #569CD6">$&</span>');
-  highlighted = highlighted.replace(numbers, '<span style="color: #B5CEA8">$&</span>');
+  // Then process other syntax - Processing style colors
+  highlighted = highlighted.replace(functions, '<span style="color: #0066CC">$&</span>');
+  highlighted = highlighted.replace(keywords, '<span style="color: #0000FF">$&</span>');
+  highlighted = highlighted.replace(numbers, '<span style="color: #0066CC">$&</span>');
 
   // Highlight selected word occurrences
   if (selectedWord) {
@@ -69,7 +70,7 @@ const highlightSyntax = (
   // Finally, replace comment placeholders with styled comments (no highlighting inside)
   commentPlaceholders.forEach((comment, index) => {
     const placeholder = `__COMMENT_${index}__`;
-    highlighted = highlighted.replace(placeholder, `<span style="color: #6A9955">${comment}</span>`);
+    highlighted = highlighted.replace(placeholder, `<span style="color: #808080">${comment}</span>`);
   });
 
   return highlighted;
@@ -80,6 +81,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   onChange,
   readOnly = false,
   errorLine = null,
+  onCursorChange,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [lineCount, setLineCount] = useState(1);
@@ -136,16 +138,31 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       }
     };
 
+    const updateCursorPosition = () => {
+      if (textarea && onCursorChange) {
+        const start = textarea.selectionStart;
+        const textBeforeCursor = value.substring(0, start);
+        const lines = textBeforeCursor.split('\n');
+        const line = lines.length;
+        const col = lines[lines.length - 1].length + 1;
+        onCursorChange({ line, col });
+      }
+    };
+
     textarea.addEventListener('click', handleSelectionChange);
     textarea.addEventListener('keyup', handleSelectionChange);
     textarea.addEventListener('input', handleSelectionChange);
+    textarea.addEventListener('click', updateCursorPosition);
+    textarea.addEventListener('keyup', updateCursorPosition);
 
     return () => {
       textarea.removeEventListener('click', handleSelectionChange);
       textarea.removeEventListener('keyup', handleSelectionChange);
       textarea.removeEventListener('input', handleSelectionChange);
+      textarea.removeEventListener('click', updateCursorPosition);
+      textarea.removeEventListener('keyup', updateCursorPosition);
     };
-  }, [value]);
+  }, [value, onCursorChange]);
 
   // Helper function to find matching bracket
   const findMatchingBracket = (
@@ -254,16 +271,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
 
   return (
-    <div className="flex h-full bg-[#1E1E1E] text-ide-text font-mono text-[14px] overflow-hidden">
+    <div className="flex h-full bg-white text-[#333] font-mono text-[14px] overflow-hidden">
       {/* Line numbers */}
-      <div className="bg-[#1E1E1E] px-4 py-4 text-[#858585] select-none text-right border-r border-[#3E3E42] overflow-hidden">
+      <div className="bg-[#F5F5F5] px-4 py-4 text-[#999] select-none text-right border-r border-[#E0E0E0] overflow-hidden">
         {Array.from({ length: lineCount }, (_, i) => {
           const lineNum = i + 1;
           const isError = errorLine !== null && errorLine === lineNum;
           return (
             <div
               key={lineNum}
-              className={`leading-[1.5] h-[21px] ${isError ? 'text-ide-error font-bold' : ''}`}
+              className={`leading-[1.5] h-[21px] ${isError ? 'text-red-600 font-bold' : ''}`}
             >
               {lineNum}
             </div>
@@ -339,7 +356,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             return (
               <div
                 key={i}
-                className={`h-[21px] ${isError ? 'bg-red-900/30' : ''}`}
+                className={`h-[21px] ${isError ? 'bg-red-100' : ''}`}
                 dangerouslySetInnerHTML={{ 
                   __html: lineHighlighted || '&nbsp;' 
                 }}
@@ -355,8 +372,8 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
-          className="w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none leading-[1.5] overflow-auto relative z-10"
-          style={{ caretColor: '#CCCCCC' }}
+          className="w-full h-full px-4 py-4 bg-transparent text-transparent caret-[#333] outline-none resize-none leading-[1.5] overflow-auto relative z-10"
+          style={{ caretColor: '#333' }}
           spellCheck={false}
           autoComplete="off"
           autoCorrect="off"

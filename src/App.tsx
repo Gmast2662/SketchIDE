@@ -35,6 +35,7 @@ function App() {
   const [hasSeenWelcome, setHasSeenWelcome] = useState(() => {
     return localStorage.getItem('hasSeenWelcome') === 'true';
   });
+  const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
 
   // Auto-save
   useAutoSave(code);
@@ -307,7 +308,7 @@ function App() {
   });
 
   return (
-    <div className="h-screen flex flex-col bg-ide-bg text-ide-text">
+    <div className="h-screen flex flex-col bg-[#F5F5F5] text-[#333]">
       {/* Menu Bar */}
       <MenuBar
         onNewProject={handleNewProject}
@@ -330,18 +331,23 @@ function App() {
       />
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-[#F5F5F5]">
         {/* Left: Code Editor */}
-        <div className="w-full lg:w-1/2 flex flex-col border-r border-ide-border">
+        <div className="w-full lg:w-1/2 flex flex-col border-r border-[#D3D3D3]">
           <div className="flex-1 overflow-hidden">
-            <CodeEditor value={code} onChange={setCode} errorLine={errorLine} />
+            <CodeEditor 
+              value={code} 
+              onChange={setCode} 
+              errorLine={errorLine}
+              onCursorChange={setCursorPosition}
+            />
           </div>
         </div>
 
         {/* Right: Canvas + Console */}
         <div className="w-full lg:w-1/2 flex flex-col">
           {/* Canvas */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden bg-[#E8E8E8]">
             <Canvas canvasRef={canvasRef} width={canvasSize.width} height={canvasSize.height} />
           </div>
 
@@ -353,6 +359,17 @@ function App() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Status Bar - Processing style */}
+      <div className="bg-[#F5F5F5] border-t border-[#D3D3D3] px-3 py-1 flex items-center gap-2 text-xs text-[#666] h-6">
+        <span className={isRunning ? 'text-[#0066CC] font-medium' : ''}>
+          {isRunning ? 'Running' : 'Ready'}
+        </span>
+        <span className="text-[#D3D3D3]">|</span>
+        <span>
+          Line {cursorPosition.line}, Col {cursorPosition.col}
+        </span>
       </div>
 
       {/* Modals */}
@@ -376,9 +393,9 @@ function App() {
 
       {/* Initial Examples Prompt */}
       {!hasSeenWelcome && (
-        <div className="fixed bottom-4 right-4 bg-ide-toolbar border border-ide-accent rounded-lg p-4 shadow-2xl max-w-sm z-50">
-          <div className="text-sm text-ide-text mb-3">
-            <strong className="text-ide-accent">New to coding?</strong>
+        <div className="fixed bottom-16 right-4 bg-white border border-[#D3D3D3] rounded-lg p-4 shadow-xl max-w-sm z-50">
+          <div className="text-sm text-[#333] mb-3">
+            <strong className="text-[#0066CC]">New to coding?</strong>
             <br />
             Start with our built-in examples to learn the basics!
           </div>
@@ -388,13 +405,13 @@ function App() {
                 setShowExamples(true);
                 handleDismissWelcome();
               }}
-              className="px-4 py-2 bg-ide-accent text-white rounded hover:opacity-90 transition-opacity text-sm font-medium"
+              className="px-4 py-2 bg-[#0066CC] text-white rounded hover:bg-[#0052A3] transition-colors text-sm font-medium"
             >
               View Examples
             </button>
             <button
               onClick={handleDismissWelcome}
-              className="px-4 py-2 bg-ide-panel text-ide-text rounded hover:bg-ide-border transition-colors text-sm"
+              className="px-4 py-2 bg-[#F5F5F5] text-[#333] rounded hover:bg-[#E0E0E0] transition-colors text-sm border border-[#D3D3D3]"
             >
               Dismiss
             </button>
