@@ -1,78 +1,56 @@
-# ArtLang IDE
+# SketchIDE
 
-A modern, web-based coding environment featuring a Lua-like language with Processing-inspired graphics capabilities.
+A modern, beginner-friendly coding environment for visual programming, inspired by Processing. Create interactive graphics, animations, and games with a simple, easy-to-learn language.
 
 ## Features
 
-- **Lua-like Syntax**: Clean, readable syntax similar to Lua/Luau
-- **Processing-like Graphics**: Easy-to-use graphics functions for creating visual art
-- **Modern IDE**: Clean, simplified interface inspired by Processing
-- **Multiple Tabs**: Work on multiple sketches simultaneously
-- **Theme Support**: Choose from Light, Dark, Monokai, and Solarized themes
-- **Save/Load**: Save your sketches as `.art` files
+- **Processing-like Syntax**: Clean, beginner-friendly syntax similar to Processing
+- **Visual Programming**: Easy-to-use graphics functions for creating art and animations
+- **Modern IDE**: Clean interface inspired by Processing IDE
+- **Project Management**: Save sketches to your sketchbook folder
 - **Real-time Execution**: Run your code and see results instantly
+- **Examples Library**: Built-in examples to help you learn
+- **Auto-save**: Your code is automatically saved as you work
+- **Error Detection**: Real-time error highlighting and console messages
+
+## Installation
+
+### Windows
+1. Download `SketchIDE Setup 1.0.0.exe` from the releases
+2. Run the installer
+3. Launch SketchIDE from the Start Menu or desktop shortcut
+
+### Portable Version
+1. Extract `win-unpacked` folder
+2. Run `SketchIDE.exe`
+3. No installation required!
 
 ## Getting Started
 
-Simply open `index.html` in a modern web browser. No installation required!
-
-## Language Syntax
-
 ### Basic Structure
 
-```lua
-function setup()
-    -- Called once at the start
-    background(240, 240, 240)
-end
+```javascript
+function setup() {
+  // Called once at the start
+  size(400, 400);
+  background(240, 240, 240);
+}
 
-function draw()
-    -- Called repeatedly (animation loop)
-    fill(100, 150, 255)
-    circle(width / 2, height / 2, 50)
-end
+function loop() {
+  // Called repeatedly (animation loop)
+  fill(100, 150, 255);
+  ellipse(mouseX, mouseY, 50, 50);
+}
 ```
 
-### Variables
+### Saving Projects
 
-Variables are global by default - no need for "local" keyword:
+- **Ctrl+S**: Save the current project (prompts for name if new)
+- **Shift+Ctrl+S**: Save as a new project (always prompts for name)
+- Projects are automatically saved to your sketchbook folder:
+  - Windows: `%APPDATA%\SketchIDE\sketchbook\`
 
-```lua
-x = 100
-name = "Hello"
-isActive = true
-```
-
-### Functions
-
-```lua
-function myFunction(x, y)
-    return x + y
-end
-```
-
-### Control Flow
-
-```lua
--- If statement
-if x > 100 then
-    print("Large")
-else
-    print("Small")
-end
-
--- For loop
-for i = 1, 10, 1 do
-    print(i)
-end
-
--- While loop
-while x < 100 do
-    x = x + 1
-end
-```
-
-## Graphics Functions
+## Language Reference
 
 ### Drawing Shapes
 
@@ -85,98 +63,77 @@ end
 
 ### Colors
 
-- `background(r, g, b)` - Set background color
+- `background(r, g, b)` - Set background color (0-255)
 - `fill(r, g, b)` - Set fill color
 - `stroke(r, g, b)` - Set stroke color
 - `noFill()` - Disable filling
 - `noStroke()` - Disable stroking
 - `strokeWeight(width)` - Set stroke width
 
-### Text
+### Mouse & Keyboard
 
-- `text(str, x, y)` - Draw text
-- `textSize(size)` - Set text size
-
-### Transformations
-
-- `push()` - Save current transformation state
-- `pop()` - Restore transformation state
-- `translate(x, y)` - Translate coordinate system
-- `rotate(angle)` - Rotate coordinate system
-- `scale(x, y)` - Scale coordinate system
-
-## Built-in Variables
-
-- `width` - Canvas width
-- `height` - Canvas height
 - `mouseX`, `mouseY` - Current mouse position
-- `pmouseX`, `pmouseY` - Previous mouse position
-- `mousePressed` - True if mouse is pressed
-- `keyPressed` - True if key is pressed
-- `key` - Current key being pressed
-- `frameCount` - Number of frames since start
-- `PI`, `TWO_PI`, `HALF_PI` - Math constants
+- `mousePressed` - True if mouse button is pressed
+- `mouseClicked` - True if mouse was clicked this frame
+- `keyPressed` - True if any key is pressed
+- `keyClicked()` - True if a key was clicked this frame
+- `keyPressed("a")` - True if specific key(s) are pressed
+- `mouseClicked(leftMouse)` - True if left mouse button was clicked
+- `mouseClicked(rightMouse)` - True if right mouse button was clicked
+- `mouseClicked(middleMouse)` - True if middle mouse button was clicked
 
-## Math Functions
+### Interactive Buttons
 
+- `button(x, y, width, height, id)` - Create a button
+- `buttonClicked("id")` - Check if a button was clicked
+
+### Utility Functions
+
+- `print(value)` - Print to console
 - `random(min, max)` - Random number
-- `map(value, start1, stop1, start2, stop2)` - Map value from one range to another
-- `constrain(value, min, max)` - Constrain value to range
-- `dist(x1, y1, x2, y2)` - Distance between two points
-- `lerp(start, stop, amt)` - Linear interpolation
-- `cos(angle)`, `sin(angle)`, `tan(angle)` - Trigonometric functions
-- `sqrt(value)` - Square root
-- `pow(base, exp)` - Power function
-- `abs(value)` - Absolute value
-- `floor(value)`, `ceil(value)`, `round(value)` - Rounding functions
-- `min(a, b)`, `max(a, b)` - Min/Max functions
+- `map(value, min1, max1, min2, max2)` - Map a value from one range to another
+- `delay(seconds)` - Non-blocking delay (e.g., `delay(0.5)` for 500ms)
 
-## Examples
+### Encryption
 
-### Simple Animation
-
-```lua
-function setup()
-    background(240, 240, 240)
-end
-
-function draw()
-    fill(100, 150, 255)
-    noStroke()
-    
-    x = width / 2 + cos(frameCount * 0.05) * 100
-    y = height / 2 + sin(frameCount * 0.05) * 100
-    
-    circle(x, y, 50)
-end
-```
-
-### Interactive Drawing
-
-```lua
-function setup()
-    background(255, 255, 255)
-end
-
-function draw()
-    if mousePressed then
-        fill(255, 0, 0)
-        circle(mouseX, mouseY, 20)
-    end
-end
-```
+- `encrypt(data)` - Encrypt text or numbers
+- `decrypt(encrypted)` - Decrypt previously encrypted data
 
 ## Keyboard Shortcuts
 
-- `Ctrl/Cmd + R` - Run code
-- `Ctrl/Cmd + S` - Save
-- `Ctrl/Cmd + N` - New tab
+- `Ctrl+R` - Run code
+- `Ctrl+S` - Save project
+- `Ctrl+Shift+S` - Save as new project
+- `Ctrl+N` - New project
+- `Ctrl+O` - Open project
+- `Ctrl+Shift+F` - Format code
+- `Ctrl+Shift+C` - Clear console
 
-## Browser Compatibility
+## Examples
 
-Works best in modern browsers (Chrome, Firefox, Safari, Edge).
+Check out the built-in examples from the Help menu to learn:
+- Basic drawing
+- Interactive animations
+- Mouse and keyboard input
+- Button systems
+- Player movement
+- Particle systems
+- And more!
+
+## Version
+
+Current version: **1.0.0**
+
+The app will notify you when updates are available. You can check for updates manually or download the latest version from the releases page.
 
 ## License
 
 Free to use and modify!
 
+## Contributing
+
+Contributions are welcome! Feel free to submit issues or pull requests.
+
+## Support
+
+For help and documentation, use the Help menu in the app or check the built-in examples.

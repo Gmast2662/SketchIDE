@@ -9,6 +9,7 @@ import { Console } from './components/Console';
 import { ExamplesPanel } from './components/ExamplesPanel';
 import { ProjectsPanel } from './components/ProjectsPanel';
 import { HelpPanel } from './components/HelpPanel';
+import { UpdateNotification } from './components/UpdateNotification';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useAutoSave } from './hooks/useAutoSave';
 import { CodeInterpreter } from './lib/interpreter';
@@ -36,9 +37,28 @@ function App() {
   const [hasSeenWelcome, setHasSeenWelcome] = useState(() => {
     return localStorage.getItem('hasSeenWelcome') === 'true';
   });
+  const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const currentVersion = '1.0.0';
 
   // Auto-save
   useAutoSave(code);
+
+  // Check for updates (check package.json version vs stored latest version)
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      // In a real app, you'd check against a remote endpoint or GitHub releases
+      // For now, we'll check against a version stored in localStorage
+      const storedLatestVersion = localStorage.getItem('latestVersion');
+      if (storedLatestVersion && storedLatestVersion !== currentVersion) {
+        setLatestVersion(storedLatestVersion);
+      }
+    };
+
+    // Check on mount, then every 24 hours
+    checkForUpdates();
+    const interval = setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [currentVersion]);
 
   // Add console message
   const addConsoleMessage = useCallback(
@@ -531,6 +551,23 @@ function App() {
       )}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+
+      {/* Update Notification */}
+      {latestVersion && (
+        <UpdateNotification
+          version={currentVersion}
+          latestVersion={latestVersion}
+          onUpdate={() => {
+            // Open download page or trigger update
+            window.open('https://github.com/yourusername/sketchide/releases', '_blank');
+          }}
+          onDismiss={() => {
+            // Store dismissed version to not show again
+            localStorage.setItem('updateDismissed', latestVersion);
+            setLatestVersion(null);
+          }}
+        />
+      )}
 
       {/* Initial Examples Prompt */}
       {!hasSeenWelcome && (
