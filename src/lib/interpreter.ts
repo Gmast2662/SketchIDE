@@ -202,7 +202,27 @@ export class CodeInterpreter {
 
       // Transform code syntax
       // Note: <= and >= operators are preserved as-is (word boundaries prevent 'or'/'and' from matching inside them)
-      let transformedCode = code
+      
+      // First, protect strings and comments from transformation
+      const stringPlaceholders: string[] = [];
+      const commentPlaceholders: string[] = [];
+      let protectedCode = code;
+      
+      // Protect strings
+      protectedCode = protectedCode.replace(/(["'])((?:\\.|(?!\1).)*?)\1/g, (match) => {
+        const placeholder = `__STRING_${stringPlaceholders.length}__`;
+        stringPlaceholders.push(match);
+        return placeholder;
+      });
+      
+      // Protect comments
+      protectedCode = protectedCode.replace(/\/\/.*/g, (match) => {
+        const placeholder = `__COMMENT_${commentPlaceholders.length}__`;
+        commentPlaceholders.push(match);
+        return placeholder;
+      });
+      
+      let transformedCode = protectedCode
         // Replace var with let
         .replace(/\bvar\b/g, 'let')
         // Replace 'or' with '||' (word boundary ensures it doesn't match in 'for', 'floor', etc.)
@@ -211,9 +231,22 @@ export class CodeInterpreter {
         .replace(/\band\b/g, '&&')
         // Replace 'not' with '!' (word boundary ensures it doesn't match in 'note', 'notify', etc.)
         .replace(/\bnot\b/g, '!')
-        // Replace function with const arrow function
-        .replace(/function\s+(\w+)\s*\(/g, 'const $1 = (')
-        .replace(/\)\s*{/g, ') => {');
+        // Replace function with const arrow function - only match function declarations
+        .replace(/\bfunction\s+(\w+)\s*\(/g, 'const $1 = (')
+        // Replace ) { with ) => { but only for function definitions
+        .replace(/\)\s*\{/g, ') => {');
+      
+      // Restore strings
+      stringPlaceholders.forEach((str, index) => {
+        const placeholder = `__STRING_${index}__`;
+        transformedCode = transformedCode.replace(placeholder, str);
+      });
+      
+      // Restore comments
+      commentPlaceholders.forEach((comment, index) => {
+        const placeholder = `__COMMENT_${index}__`;
+        transformedCode = transformedCode.replace(placeholder, comment);
+      });
 
       // Arrays work naturally with JavaScript [] syntax
       // Users can use: let list = [] or let list = [1, 2, 3]
@@ -224,12 +257,15 @@ export class CodeInterpreter {
       const transformedCodeLines = transformedCode.split('\n');
 
       // Transform array syntax to be beginner-friendly
-      // Replace [] with createList() for empty arrays
+      // But only for array literals, not object literals {}
+      // Replace [] with createList() for empty arrays (but not {} which are objects)
       transformedCode = transformedCode.replace(/=\s*\[\s*\]/g, '= createList()');
       // Replace [item1, item2, ...] with createList(item1, item2, ...)
+      // This regex won't match {} objects, only [] arrays
       transformedCode = transformedCode.replace(/=\s*\[([^\]]+)\]/g, (match, items) => {
         return `= createList(${items})`;
       });
+      // Note: Objects {} work natively in JavaScript, no transformation needed
 
       // Execute the transformed code with error tracking
       const userCode = new Function(

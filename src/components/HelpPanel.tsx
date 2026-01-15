@@ -40,7 +40,8 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
     {
       category: 'Variables & Logic',
       items: [
-        { name: 'var name = value', description: 'Declare a variable' },
+        { name: 'var name = value', description: 'Declare a variable (automatically converted to let)' },
+        { name: 'let name = value', description: 'Declare a variable (modern way, recommended)' },
         { name: 'if (condition) { }', description: 'Conditional statement' },
         { name: 'while (condition) { }', description: 'Loop while true' },
         { name: 'and, or, not', description: 'Logical operators' },
@@ -72,7 +73,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
     {
       category: 'Lists (Arrays)',
       items: [
-        { name: 'let list = []', description: 'Create an empty list' },
+        { name: 'let list = []', description: 'Create an empty list (array)' },
         { name: 'let list = [1, 2, 3]', description: 'Create a list with items' },
         { name: 'list[0]', description: 'Access item at index (first item is 0)' },
         { name: 'createList(...items)', description: 'Create a new list with items' },
@@ -140,6 +141,52 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Key Concepts */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-ide-text mb-4">
+              Key Concepts
+            </h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  var vs let
+                </h4>
+                <p className="text-sm text-ide-text mb-2">
+                  Both <code className="text-ide-accent">var</code> and <code className="text-ide-accent">let</code> declare variables. In this IDE, <code className="text-ide-accent">var</code> is automatically converted to <code className="text-ide-accent">let</code>, so they work the same way.
+                </p>
+                <p className="text-sm text-ide-text">
+                  <strong>Example:</strong> <code className="text-ide-accent">var x = 10</code> and <code className="text-ide-accent">let x = 10</code> both work the same.
+                </p>
+              </div>
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  Arrays [] vs Objects {}
+                </h4>
+                <p className="text-sm text-ide-text mb-2">
+                  <strong>Arrays <code className="text-ide-accent">[]</code>:</strong> Store lists of items. Access items by number: <code className="text-ide-accent">list[0]</code>
+                </p>
+                <p className="text-sm text-ide-text mb-2">
+                  <strong>Objects <code className="text-ide-accent">{}</code>:</strong> Store key-value pairs. Access items by name: <code className="text-ide-accent">obj.name</code>
+                </p>
+                <p className="text-sm text-ide-text">
+                  <strong>Examples:</strong><br />
+                  <code className="text-ide-accent">let list = [1, 2, 3]</code> - Array with numbers<br />
+                  <code className="text-ide-accent">let obj = {"{"}name: "John", age: 20{"}"}</code> - Object with properties
+                </p>
+              </div>
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  Important Syntax
+                </h4>
+                <p className="text-sm text-ide-text">
+                  Always use <code className="text-ide-accent">=</code> when assigning values:<br />
+                  ✓ <code className="text-ide-accent">let list = []</code> (correct)<br />
+                  ✗ <code className="text-ide-accent">let list []</code> (missing = sign)
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Editor Features */}

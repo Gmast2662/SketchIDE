@@ -518,6 +518,73 @@ function loop() {
   ellipse(x, y, 8, 8)
 }`,
   },
+  {
+    id: 'var-vs-let',
+    name: 'var vs let',
+    category: 'Basics',
+    code: `// var and let both work the same way in this IDE
+
+function setup() {
+  background(255, 255, 255)
+  
+  // Both var and let declare variables
+  var x = 50
+  let y = 100
+  
+  // They work exactly the same
+  print("var x = " + x)
+  print("let y = " + y)
+  
+  // You can use either one
+  var size = 30
+  let color = 200
+  
+  fill(color, 100, 100)
+  ellipse(x, y, size, size)
+  
+  // var is automatically converted to let
+  // So both are fine to use!
+}`,
+  },
+  {
+    id: 'arrays-vs-objects',
+    name: 'Arrays vs Objects',
+    category: 'Basics',
+    code: `// Learn the difference between arrays [] and objects {}
+
+function setup() {
+  background(255, 255, 255)
+  
+  // ARRAYS [] - Store lists of items, accessed by number
+  var numbers = [10, 20, 30, 40, 50]
+  var colors = [255, 100, 50]
+  
+  print("Array - First number: " + numbers[0])
+  print("Array - Second number: " + numbers[1])
+  print("Array - Length: " + getLength(numbers))
+  
+  // Access array items by index (number)
+  fill(colors[0], colors[1], colors[2])
+  ellipse(100, 100, numbers[0], numbers[0])
+  
+  // OBJECTS {} - Store key-value pairs, accessed by name
+  var person = {name: "John", age: 20, x: 200, y: 150}
+  
+  print("Object - Name: " + person.name)
+  print("Object - Age: " + person.age)
+  
+  // Access object properties by name
+  fill(100, 200, 255)
+  ellipse(person.x, person.y, 40, 40)
+  
+  fill(50, 50, 50)
+  text(person.name, person.x - 20, person.y + 60, 16)
+  text("Age: " + person.age, person.x - 20, person.y + 80, 14)
+  
+  // Arrays use numbers: list[0]
+  // Objects use names: obj.name
+}`,
+  },
 ];
 
 export const DEFAULT_CODE = `// Welcome to ProcessingIDE!

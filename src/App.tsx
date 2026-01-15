@@ -106,23 +106,42 @@ function App() {
         }
       }
       
+      // Pattern 3: Look for "Unexpected token" errors - try to find the problematic line
+      if (errorMessage.includes('Unexpected token')) {
+        // Look for common syntax errors and try to find the line
+        if (errorMessage.includes("'='") || errorMessage.includes("'=>'")) {
+          // This is likely a function transformation issue
+          // Search for function definitions that might have issues
+          for (let i = 0; i < codeLines.length; i++) {
+            const line = codeLines[i];
+            if (line.includes('function') && (line.includes('=>') || line.match(/\)\s*\{/))) {
+              return i + 1;
+            }
+          }
+        }
+      }
+      
       match = stack.match(/<anonymous>:\d+:(\d+)/);
       if (match) {
         const lineNum = parseInt(match[1], 10);
+        // Account for wrapper code (2 lines: if setup, return loop)
         const adjustedLine = lineNum - 2;
         if (adjustedLine > 0 && adjustedLine <= codeLines.length) {
           return adjustedLine;
         }
+        // If adjustment doesn't work, try the raw line number
         if (lineNum > 0 && lineNum <= codeLines.length) {
           return lineNum;
         }
       }
       
+      // Pattern 4: Look for ":X:Y" pattern in stack (line:column)
       const stackLines = stack.split('\n');
       for (const stackLine of stackLines) {
         match = stackLine.match(/:(\d+):(\d+)/);
         if (match) {
           const lineNum = parseInt(match[1], 10);
+          // Try to map to user code (accounting for wrapper)
           const adjustedLine = lineNum - 2;
           if (adjustedLine > 0 && adjustedLine <= codeLines.length) {
             return adjustedLine;
@@ -130,6 +149,7 @@ function App() {
         }
       }
       
+      // Pattern 5: Look for specific error patterns
       if (errorMessage.includes('is not defined') || errorMessage.includes('Cannot read')) {
         const identifierMatch = errorMessage.match(/'?(\w+)'? (is not defined|Cannot read)/);
         if (identifierMatch) {
@@ -138,6 +158,21 @@ function App() {
             if (codeLines[i].includes(identifier) && !codeLines[i].trim().startsWith('//')) {
               return i + 1;
             }
+          }
+        }
+      }
+      
+      // Pattern 6: For syntax errors, try to find lines with common issues
+      if (errorMessage.includes('SyntaxError') || errorMessage.includes('Unexpected')) {
+        // Look for lines with unmatched brackets or common syntax issues
+        for (let i = 0; i < codeLines.length; i++) {
+          const line = codeLines[i].trim();
+          // Check for common syntax errors
+          if (line.includes('function') && !line.includes('{') && !line.endsWith(')')) {
+            return i + 1;
+          }
+          if ((line.match(/\(/g) || []).length !== (line.match(/\)/g) || []).length) {
+            return i + 1;
           }
         }
       }
@@ -175,9 +210,10 @@ function App() {
       
       if (errorLineNum) {
         setErrorLine(errorLineNum);
-        addConsoleMessage(`Error on line ${errorLineNum}: ${errorMessage}`, 'error', errorLineNum);
+        addConsoleMessage(errorMessage, 'error', errorLineNum);
       } else {
-        addConsoleMessage(`Error: ${errorMessage}`, 'error');
+        setErrorLine(null);
+        addConsoleMessage(errorMessage, 'error');
       }
       
       setIsRunning(false);

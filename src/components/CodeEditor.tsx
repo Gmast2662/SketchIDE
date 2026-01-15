@@ -45,19 +45,39 @@ const highlightSyntax = (
 
   // Highlight selected word occurrences
   if (selectedWord) {
-    const wordRegex = new RegExp(`\\b${selectedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
-    highlighted = highlighted.replace(wordRegex, (match, offset) => {
-      // Check if we're in a comment or string (basic check)
-      const beforeMatch = highlighted.substring(0, offset);
+    // Escape special regex characters in the word
+    const escapedWord = selectedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'g');
+    
+    // Track positions to avoid double-highlighting
+    const positions: number[] = [];
+    let match;
+    const originalHighlighted = highlighted;
+    
+    // Find all matches and their positions
+    while ((match = wordRegex.exec(originalHighlighted)) !== null) {
+      positions.push(match.index);
+    }
+    
+    // Replace matches in reverse order to preserve positions
+    for (let i = positions.length - 1; i >= 0; i--) {
+      const pos = positions[i];
+      const beforeMatch = highlighted.substring(0, pos);
+      const afterMatch = highlighted.substring(pos + selectedWord.length);
+      
+      // Check if we're in a comment or string
       const lastComment = beforeMatch.lastIndexOf('__COMMENT_');
       const lastString = beforeMatch.lastIndexOf('<span style="color: #CE9178">');
+      const lastStringEnd = beforeMatch.lastIndexOf('</span>');
       const isInComment = lastComment > lastString;
+      const isInString = lastString > lastComment && (lastStringEnd < lastString || lastStringEnd === -1);
       
-      if (!isInComment) {
-        return `<span style="background-color: rgba(255, 255, 0, 0.3); border-bottom: 1px solid rgba(255, 255, 0, 0.6);">${match}</span>`;
+      if (!isInComment && !isInString) {
+        const matchText = highlighted.substring(pos, pos + selectedWord.length);
+        const highlightedMatch = `<span style="background-color: rgba(255, 255, 0, 0.3); border-bottom: 1px solid rgba(255, 255, 0, 0.6);">${matchText}</span>`;
+        highlighted = beforeMatch + highlightedMatch + afterMatch;
       }
-      return match;
-    });
+    }
   }
 
   // Finally, replace comment placeholders with styled comments (no highlighting inside)
@@ -85,7 +105,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     const lines = value.split('\n').length;
     setLineCount(lines);
     setHighlightedCode(highlightSyntax(value));
-  }, [value]);
+  }, [value, selectedWord, matchingBracket]);
 
   // Handle selection change for word highlighting and bracket matching
   useEffect(() => {
@@ -93,11 +113,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     if (!textarea) return;
 
     const handleSelectionChange = () => {
+      if (!textarea) return;
+      
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       
       // Only highlight if cursor is at a single position (not a selection)
-      if (start === end) {
+      if (start === end && start >= 0 && start < value.length) {
         // Check for bracket matching
         const char = value[start];
         const bracketPairs: { [key: string]: string } = {
@@ -130,14 +152,23 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       }
     };
 
+    const handleMouseUp = () => {
+      // Small delay to ensure selection is updated
+      setTimeout(handleSelectionChange, 10);
+    };
+
     textarea.addEventListener('click', handleSelectionChange);
     textarea.addEventListener('keyup', handleSelectionChange);
     textarea.addEventListener('input', handleSelectionChange);
+    textarea.addEventListener('mouseup', handleMouseUp);
+    textarea.addEventListener('selectionchange', handleSelectionChange);
 
     return () => {
       textarea.removeEventListener('click', handleSelectionChange);
       textarea.removeEventListener('keyup', handleSelectionChange);
       textarea.removeEventListener('input', handleSelectionChange);
+      textarea.removeEventListener('mouseup', handleMouseUp);
+      textarea.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [value]);
 
@@ -287,10 +318,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             
             // Find bracket positions to highlight on this line (relative to line start)
             const bracketPositions = new Set<number>();
-            if (matchingBracket !== null) {
+            if (matchingBracket !== null && matchingBracket >= 0) {
               const bracketLine = value.substring(0, matchingBracket).split('\n').length - 1;
               if (bracketLine === i) {
-                bracketPositions.add(matchingBracket - lineStartPos);
+                const bracketPosInLine = matchingBracket - lineStartPos;
+                if (bracketPosInLine >= 0 && bracketPosInLine < line.length) {
+                  bracketPositions.add(bracketPosInLine);
+                }
               }
             }
             if (cursorPos !== null) {
@@ -298,14 +332,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               if (cursorLine === i) {
                 const cursorChar = value[cursorPos];
                 if (cursorChar && ['(', ')', '[', ']', '{', '}'].includes(cursorChar)) {
-                  bracketPositions.add(cursorPos - lineStartPos);
+                  const cursorPosInLine = cursorPos - lineStartPos;
+                  if (cursorPosInLine >= 0 && cursorPosInLine < line.length) {
+                    bracketPositions.add(cursorPosInLine);
+                  }
                 }
               }
             }
             
             // Mark brackets that need highlighting with placeholders before syntax highlighting
             let lineWithMarkers = line;
-            const bracketMarkers: { marker: string; char: string }[] = [];
+            const bracketMarkers: { marker: string; char: string; pos: number }[] = [];
             if (bracketPositions.size > 0) {
               // Replace brackets at positions with unique markers (in reverse order to preserve indices)
               const sortedPositions = Array.from(bracketPositions).sort((a, b) => b - a);
@@ -313,13 +350,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                 if (pos >= 0 && pos < line.length) {
                   const bracketChar = line[pos];
                   const marker = `__BRACKET_MARKER_${bracketMarkers.length}__`;
-                  bracketMarkers.push({ marker, char: bracketChar });
+                  bracketMarkers.push({ marker, char: bracketChar, pos });
                   lineWithMarkers = lineWithMarkers.substring(0, pos) + marker + lineWithMarkers.substring(pos + 1);
                 }
               });
             }
             
-            // Apply syntax highlighting
+            // Apply syntax highlighting with word highlighting
             let lineHighlighted = highlightSyntax(lineWithMarkers, selectedWord, null, null);
             
             // Replace markers with highlighted brackets
@@ -327,7 +364,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               const bracketHtml = char.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
               const bracketStyle = 'background-color: rgba(0, 122, 204, 0.3); border: 1px solid rgba(0, 122, 204, 0.6);';
               const highlightedBracket = `<span style="${bracketStyle}">${bracketHtml}</span>`;
-              lineHighlighted = lineHighlighted.replace(marker, highlightedBracket);
+              // Replace the marker (need to escape it for regex)
+              const escapedMarker = marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              lineHighlighted = lineHighlighted.replace(new RegExp(escapedMarker, 'g'), highlightedBracket);
             });
             
             return (
