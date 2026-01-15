@@ -76,9 +76,12 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'mouseClicked', description: 'True if mouse was just clicked (resets after one frame)' },
         { name: 'isLeftMouse()', description: 'Returns true if left mouse button was clicked/pressed' },
         { name: 'isRightMouse()', description: 'Returns true if right mouse button was clicked/pressed' },
+        { name: 'mouseClicked(middleMouse)', description: 'Check if middle mouse button was clicked. Also works with: mouseClicked("middle") or mouseClicked(1)' },
         { name: 'keyPressed', description: 'True if any key is currently pressed' },
         { name: 'key', description: 'The key that was pressed (string like "a", "Enter", "Space")' },
         { name: 'isKeyPressed("key")', description: 'Check if a specific key is pressed. Example: isKeyPressed("a") or isKeyPressed("Space")' },
+        { name: 'keyPressed("key1", "key2", ...)', description: 'Check if ALL of multiple keys are pressed (AND logic). Example: keyPressed("a", "Space") requires both "a" AND "Space" to be pressed' },
+        { name: 'mouseClicked("left", "right")', description: 'Check if any mouse button was clicked. Use: mouseClicked("left", "right") or mouseClicked(leftMouse, rightMouse)' },
       ],
     },
     {

@@ -27,6 +27,11 @@ export class CodeInterpreter {
       this.animationId = null;
     }
     this.loopFunction = null;
+    // Cleanup event listeners
+    if ((this as any).cleanup) {
+      (this as any).cleanup();
+      (this as any).cleanup = null;
+    }
   }
 
   execute(code: string): void {
@@ -302,6 +307,112 @@ export class CodeInterpreter {
         }
       };
 
+      // Mouse and keyboard state
+      let mouseX = 0;
+      let mouseY = 0;
+      let mousePressed = false;
+      let mouseClicked = false;
+      let mouseButton = 0; // 0 = left, 1 = middle, 2 = right
+      let keyPressed = false;
+      let currentKey = '';
+      let pressedKeys = new Set<string>(); // Track all pressed keys
+      
+      // Set up mouse and keyboard event listeners
+      const handleMouseMove = (e: MouseEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+      };
+      
+      const handleMouseDown = (e: MouseEvent) => {
+        mousePressed = true;
+        mouseClicked = true;
+        mouseButton = e.button; // 0 = left, 1 = middle, 2 = right
+        // Reset clicked after a frame
+        setTimeout(() => { mouseClicked = false; }, 0);
+      };
+      
+      const handleMouseUp = () => {
+        mousePressed = false;
+        mouseButton = 0;
+      };
+      
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Don't capture IDE shortcuts
+        if (e.ctrlKey || e.metaKey) return;
+        keyPressed = true;
+        currentKey = e.key;
+        pressedKeys.add(e.key);
+      };
+      
+      const handleKeyUp = (e: KeyboardEvent) => {
+        pressedKeys.delete(e.key);
+        keyPressed = pressedKeys.size > 0; // Still pressed if other keys are down
+        if (pressedKeys.size === 0) {
+          currentKey = '';
+        } else {
+          // Set currentKey to the last remaining key
+          const keys = Array.from(pressedKeys);
+          currentKey = keys[keys.length - 1];
+        }
+      };
+      
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+      
+      // Cleanup function
+      const cleanup = () => {
+        canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('mousedown', handleMouseDown);
+        canvas.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+      };
+      
+      // Store cleanup for later
+      (this as any).cleanup = cleanup;
+      
+      // Helper function to check if a specific key is pressed
+      const isKeyPressed = (key: string): boolean => {
+        return pressedKeys.has(key) || currentKey === key;
+      };
+      
+      // Check if ALL of multiple keys are pressed (AND logic)
+      const keyPressedFunc = (...keys: string[]): boolean => {
+        if (keys.length === 0) return keyPressed;
+        // Require ALL keys to be pressed (AND logic)
+        return keys.every(key => isKeyPressed(key));
+      };
+      
+      // Helper functions for mouse buttons
+      const isLeftMouse = (): boolean => mouseButton === 0;
+      const isRightMouse = (): boolean => mouseButton === 2;
+      
+      // Check if any of multiple mouse buttons were clicked
+      const mouseClickedFunc = (...buttons: (string | number)[]): boolean => {
+        if (!mouseClicked) return false;
+        if (buttons.length === 0) return mouseClicked;
+        
+        return buttons.some(button => {
+          if (typeof button === 'string') {
+            if (button === 'left' || button === 'leftMouse') return mouseButton === 0;
+            if (button === 'right' || button === 'rightMouse') return mouseButton === 2;
+            if (button === 'middle' || button === 'middleMouse') return mouseButton === 1;
+          } else if (typeof button === 'number') {
+            return mouseButton === button;
+          }
+          return false;
+        });
+      };
+      
+      // Mouse button constants
+      const leftMouse = 0;
+      const rightMouse = 2;
+      const middleMouse = 1;
+
       // Decryption function - reverses the encryption
       const decrypt = (encryptedData: string): string => {
         // Check if it's a valid encrypted string
@@ -490,6 +601,11 @@ export class CodeInterpreter {
         'isKeyPressed',
         'isLeftMouse',
         'isRightMouse',
+        'keyPressedFunc',
+        'mouseClickedFunc',
+        'leftMouse',
+        'rightMouse',
+        'middleMouse',
         'canvas',
         'Math',
         'Promise',
@@ -504,16 +620,21 @@ export class CodeInterpreter {
             return placeholder;
           });
           
-          // Replace variables
-          code = code.replace(/\bmouseX\b/g, 'getMouseX()')
+          // Replace function calls FIRST (before variable replacements)
+          code = code.replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
+            .replace(/\bisLeftMouse\s*\(/g, 'isLeftMouse(')
+            .replace(/\bisRightMouse\s*\(/g, 'isRightMouse(')
+            // Replace keyPressed() function calls (but not the variable)
+            .replace(/\bkeyPressed\s*\(/g, 'keyPressedFunc(')
+            // Replace mouseClicked() function calls (but not the variable)
+            .replace(/\bmouseClicked\s*\(/g, 'mouseClickedFunc(')
+            // Now replace variables (after function calls)
+            .replace(/\bmouseX\b/g, 'getMouseX()')
             .replace(/\bmouseY\b/g, 'getMouseY()')
             .replace(/\bmousePressed\b/g, 'getMousePressed()')
-            .replace(/\bmouseClicked\b/g, 'getMouseClicked()')
-            .replace(/\bkeyPressed\b/g, 'getKeyPressed()')
-            .replace(/\bkey\b(?!\w)/g, 'getKey()')
-            .replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
-            .replace(/\bisLeftMouse\s*\(/g, 'isLeftMouse(')
-            .replace(/\bisRightMouse\s*\(/g, 'isRightMouse(');
+            .replace(/\bmouseClicked\b(?!\()/g, 'getMouseClicked()')
+            .replace(/\bkeyPressed\b(?!\()/g, 'getKeyPressed()')
+            .replace(/\bkey\b(?!\w)/g, 'getKey()');
           
           // Restore strings
           strPlaceholders.forEach((str, i) => {
@@ -574,6 +695,11 @@ export class CodeInterpreter {
         isKeyPressed,
         isLeftMouse,
         isRightMouse,
+        keyPressedFunc,
+        mouseClickedFunc,
+        leftMouse,
+        rightMouse,
+        middleMouse,
         canvas,
         Math,
         Promise

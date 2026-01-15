@@ -716,17 +716,24 @@ function loop() {
   fill(100, 150, 255)
   ellipse(mouseX, mouseY, 20, 20)
   
-  // Check if left mouse was clicked
-  if (mouseClicked and isLeftMouse()) {
+  // Check if left OR right mouse was clicked
+  if (mouseClicked("left", "right")) {
     fill(255, 100, 100)
     ellipse(mouseX, mouseY, 40, 40)
-    print("Left mouse clicked at: " + mouseX + ", " + mouseY)
+    print("Mouse clicked!")
+  }
+  
+  // Check if left mouse was clicked (using constant)
+  if (mouseClicked(leftMouse)) {
+    fill(255, 150, 150)
+    ellipse(mouseX, mouseY, 35, 35)
+    print("Left mouse clicked!")
   }
   
   // Check if right mouse was clicked
-  if (mouseClicked and isRightMouse()) {
-    fill(100, 100, 255)
-    ellipse(mouseX, mouseY, 50, 50)
+  if (mouseClicked(rightMouse)) {
+    fill(150, 150, 255)
+    ellipse(mouseX, mouseY, 45, 45)
     print("Right mouse clicked!")
   }
   
@@ -736,17 +743,32 @@ function loop() {
     ellipse(mouseX, mouseY, 30, 30)
   }
   
-  // Check if specific key is pressed
-  if (isKeyPressed("a") or isKeyPressed("A")) {
+  // Check if multiple keys are pressed (ALL of them must be pressed)
+  if (keyPressed("a", "Space")) {
     fill(255, 200, 100)
     ellipse(100, 100, 50, 50)
-    print("A key is pressed!")
+    print("Both 'a' AND 'Space' are pressed!")
   }
   
-  if (isKeyPressed("Space")) {
-    fill(200, 100, 255)
-    ellipse(300, 100, 50, 50)
-    print("Space bar pressed!")
+  // Check if three keys are all pressed
+  if (keyPressed("a", "1", "O")) {
+    fill(200, 255, 100)
+    ellipse(200, 100, 50, 50)
+    print("All three keys pressed: a, 1, and O!")
+  }
+  
+  // Middle mouse button
+  if (mouseClicked(middleMouse)) {
+    fill(255, 100, 255)
+    ellipse(mouseX, mouseY, 60, 60)
+    print("Middle mouse clicked!")
+  }
+  
+  // Check if specific key is pressed
+  if (isKeyPressed("a") or isKeyPressed("A")) {
+    fill(255, 150, 100)
+    ellipse(200, 100, 40, 40)
+    print("A key is pressed!")
   }
   
   // Check if any key is pressed

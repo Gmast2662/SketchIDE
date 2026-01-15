@@ -76,7 +76,7 @@ const highlightSyntax = (
 
   // Now process other syntax (only outside comments)
   const keywords = /\b(var|let|const|if|else|while|for|function|return|and|or|not|true|false)\b/g;
-  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max|createList|append|getLength|getItem|setItem|encrypt|decrypt|delay|mouseX|mouseY|mousePressed|mouseClicked|keyPressed|key)\b(?=\()/g;
+  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max|createList|append|getLength|getItem|setItem|encrypt|decrypt|delay|mouseX|mouseY|mousePressed|mouseClicked|keyPressed|key|isKeyPressed|isLeftMouse|isRightMouse)\b(?=\()/g;
   const numbers = /\b\d+(\.\d+)?\b/g;
   const strings = /(["'])((?:\\.|(?!\1).)*?)\1/g;
 
