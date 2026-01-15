@@ -822,7 +822,7 @@ function loop() {
     category: 'Advanced',
     code: `// User/Password System
 // Enter username and password, display username
-// Press 'p' to reset password
+// Press 'p' to reset password (use keyClicked, not isKeyPressed!)
 
 let user = {name: "", password: ""}
 let savedPassword = ""
@@ -847,10 +847,12 @@ function loop() {
   fill(0, 0, 0)
   text("User: " + user.name, 20, 50, 20)
   
-  // Check if 'p' is pressed to reset password
-  if (isKeyPressed("p") or isKeyPressed("P")) {
+  // Check if 'p' was CLICKED (not held) to reset password
+  // keyClicked() only triggers once per key press
+  if (keyClicked("p") or keyClicked("P")) {
     let newPassword = input("Enter new password:")
     savedPassword = encrypt(newPassword)
+    user.password = newPassword
     print("Password updated!")
   }
   
@@ -901,6 +903,221 @@ function loop() {
   // Draw instructions
   fill(0, 0, 0)
   text("Click the buttons above!", 50, 250, 14)
+}`,
+  },
+  {
+    id: 'player-movement',
+    name: 'Player Movement System',
+    category: 'Games',
+    code: `// Player Movement System
+// Use WASD or Arrow Keys to move the player
+
+let player = {
+  x: 200,
+  y: 150,
+  speed: 3,
+  size: 20
+}
+
+function setup() {
+  background(255, 255, 255)
+  size(400, 300)
+}
+
+function loop() {
+  // Clear with slight fade for trail effect
+  background(255, 255, 255, 0.1)
+  
+  // Movement controls (WASD or Arrow Keys)
+  if (isKeyPressed("w") or isKeyPressed("W") or isKeyPressed("ArrowUp")) {
+    player.y = player.y - player.speed
+  }
+  if (isKeyPressed("s") or isKeyPressed("S") or isKeyPressed("ArrowDown")) {
+    player.y = player.y + player.speed
+  }
+  if (isKeyPressed("a") or isKeyPressed("A") or isKeyPressed("ArrowLeft")) {
+    player.x = player.x - player.speed
+  }
+  if (isKeyPressed("d") or isKeyPressed("D") or isKeyPressed("ArrowRight")) {
+    player.x = player.x + player.speed
+  }
+  
+  // Keep player on screen
+  player.x = constrain(player.x, player.size/2, 400 - player.size/2)
+  player.y = constrain(player.y, player.size/2, 300 - player.size/2)
+  
+  // Draw player
+  fill(100, 150, 255)
+  ellipse(player.x, player.y, player.size, player.size)
+  
+  // Draw instructions
+  fill(0, 0, 0)
+  text("WASD or Arrow Keys to move", 10, 20, 12)
+}`,
+  },
+  {
+    id: 'object-spawning',
+    name: 'Object Spawning System',
+    category: 'Games',
+    code: `// Object Spawning System
+// Click to spawn objects, they fall down and disappear
+
+let objects = []
+let spawnTimer = 0
+
+function setup() {
+  background(255, 255, 255)
+  size(400, 300)
+}
+
+function loop() {
+  // Clear screen
+  background(255, 255, 255)
+  
+  // Spawn objects on mouse click
+  if (mouseClicked) {
+    let obj = {
+      x: mouseX,
+      y: mouseY,
+      speed: random(1, 3),
+      size: random(10, 30),
+      color: [random(100, 255), random(100, 255), random(100, 255)]
+    }
+    append(objects, obj)
+  }
+  
+  // Update and draw all objects
+  let i = 0
+  while (i < getLength(objects)) {
+    let obj = getItem(objects, i)
+    
+    // Move object down
+    obj.y = obj.y + obj.speed
+    
+    // Remove if off screen
+    if (obj.y > 300) {
+      // Remove object from list
+      let newObjects = []
+      for (let j = 0; j < getLength(objects); j = j + 1) {
+        if (j != i) {
+          append(newObjects, getItem(objects, j))
+        }
+      }
+      objects = newObjects
+    } else {
+      // Draw object
+      fill(obj.color[0], obj.color[1], obj.color[2])
+      ellipse(obj.x, obj.y, obj.size, obj.size)
+      i = i + 1
+    }
+  }
+  
+  // Display count
+  fill(0, 0, 0)
+  text("Objects: " + getLength(objects), 10, 20, 14)
+  text("Click to spawn", 10, 40, 12)
+}`,
+  },
+  {
+    id: 'complete-game-example',
+    name: 'Complete Game: Player & Enemies',
+    category: 'Games',
+    code: `// Complete Game Example
+// Player movement + enemy spawning system
+
+let player = {
+  x: 200,
+  y: 250,
+  speed: 4,
+  size: 20
+}
+
+let enemies = []
+let score = 0
+let gameOver = false
+
+function setup() {
+  background(255, 255, 255)
+  size(400, 300)
+}
+
+function loop() {
+  if (gameOver) {
+    background(255, 200, 200)
+    fill(0, 0, 0)
+    text("GAME OVER", 150, 140, 24)
+    text("Score: " + score, 150, 170, 18)
+    text("Press R to restart", 120, 200, 14)
+    
+    if (keyClicked("r") or keyClicked("R")) {
+      gameOver = false
+      player.x = 200
+      player.y = 250
+      enemies = []
+      score = 0
+    }
+    return
+  }
+  
+  background(255, 255, 255)
+  
+  // Player movement
+  if (isKeyPressed("a") or isKeyPressed("A")) {
+    player.x = player.x - player.speed
+  }
+  if (isKeyPressed("d") or isKeyPressed("D")) {
+    player.x = player.x + player.speed
+  }
+  player.x = constrain(player.x, player.size/2, 400 - player.size/2)
+  
+  // Spawn enemies randomly
+  if (random(0, 100) < 2) {
+    let enemy = {
+      x: random(20, 380),
+      y: -20,
+      speed: random(2, 4),
+      size: random(15, 25)
+    }
+    append(enemies, enemy)
+  }
+  
+  // Update enemies
+  let i = 0
+  while (i < getLength(enemies)) {
+    let enemy = getItem(enemies, i)
+    enemy.y = enemy.y + enemy.speed
+    
+    // Check collision with player
+    let distance = dist(player.x, player.y, enemy.x, enemy.y)
+    if (distance < (player.size/2 + enemy.size/2)) {
+      gameOver = true
+    }
+    
+    // Remove if off screen
+    if (enemy.y > 320) {
+      let newEnemies = []
+      for (let j = 0; j < getLength(enemies); j = j + 1) {
+        if (j != i) {
+          append(newEnemies, getItem(enemies, j))
+        }
+      }
+      enemies = newEnemies
+      score = score + 1
+    } else {
+      fill(255, 100, 100)
+      ellipse(enemy.x, enemy.y, enemy.size, enemy.size)
+      i = i + 1
+    }
+  }
+  
+  // Draw player
+  fill(100, 150, 255)
+  ellipse(player.x, player.y, player.size, player.size)
+  
+  // Draw score
+  fill(0, 0, 0)
+  text("Score: " + score, 10, 20, 16)
+  text("A/D to move", 10, 40, 12)
 }`,
   },
 ];

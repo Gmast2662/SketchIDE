@@ -316,6 +316,8 @@ export class CodeInterpreter {
       let keyPressed = false;
       let currentKey = '';
       let pressedKeys = new Set<string>(); // Track all pressed keys
+      let keyClicked = false; // True for one frame after key press
+      let clickedKey: string | null = null; // The key that was just clicked
       
       // Set up mouse and keyboard event listeners
       const handleMouseMove = (e: MouseEvent) => {
@@ -340,6 +342,13 @@ export class CodeInterpreter {
       const handleKeyDown = (e: KeyboardEvent) => {
         // Don't capture IDE shortcuts
         if (e.ctrlKey || e.metaKey) return;
+        
+        // Only set keyClicked if this key wasn't already pressed
+        if (!pressedKeys.has(e.key)) {
+          keyClicked = true;
+          clickedKey = e.key;
+        }
+        
         keyPressed = true;
         pressedKeys.add(e.key);
         // Set currentKey to the most recently pressed key
@@ -571,7 +580,10 @@ export class CodeInterpreter {
         .replace(/\basync\s+\(/g, 'async (')
         // Transform isKeyPressed("a" or "A") to check both keys
         .replace(/isKeyPressed\s*\(\s*"([^"]+)"\s+or\s+"([^"]+)"\s*\)/g, '(isKeyPressed("$1") || isKeyPressed("$2"))')
-        .replace(/isKeyPressed\s*\(\s*'([^']+)'\s+or\s+'([^']+)'\s*\)/g, "(isKeyPressed('$1') || isKeyPressed('$2'))");
+        .replace(/isKeyPressed\s*\(\s*'([^']+)'\s+or\s+'([^']+)'\s*\)/g, "(isKeyPressed('$1') || isKeyPressed('$2'))")
+        // Transform keyClicked("a" or "A") to check both keys
+        .replace(/keyClicked\s*\(\s*"([^"]+)"\s+or\s+"([^"]+)"\s*\)/g, '(keyClicked("$1") || keyClicked("$2"))')
+        .replace(/keyClicked\s*\(\s*'([^']+)'\s+or\s+'([^']+)'\s*\)/g, "(keyClicked('$1') || keyClicked('$2'))");
       
       // Restore strings
       stringPlaceholders.forEach((str, index) => {
@@ -692,6 +704,8 @@ export class CodeInterpreter {
             .replace(/\bisRightMouse\s*\(/g, 'isRightMouse(')
             // Replace keyPressed() function calls (but not the variable)
             .replace(/\bkeyPressed\s*\(/g, 'keyPressedFunc(')
+            // Replace keyClicked() function calls
+            .replace(/\bkeyClicked\s*\(/g, 'keyClickedFunc(')
             // Replace mouseClicked() function calls (but not the variable)
             .replace(/\bmouseClicked\s*\(/g, 'mouseClickedFunc(')
             // Replace button() calls
@@ -705,6 +719,8 @@ export class CodeInterpreter {
             .replace(/\bmousePressed\b/g, 'getMousePressed()')
             .replace(/\bmouseClicked\b(?!\()/g, 'getMouseClicked()')
             .replace(/\bkeyPressed\b(?!\()/g, 'getKeyPressed()')
+            .replace(/\bkeyClicked\b(?!\()/g, 'getKeyClicked()')
+            .replace(/\bclickedKey\b/g, 'getClickedKey()')
             .replace(/\bkey\b(?!\w)/g, 'getKey()');
           
           // Restore strings
@@ -763,10 +779,13 @@ export class CodeInterpreter {
         () => mouseClicked,
         () => keyPressed,
         () => currentKey,
+        keyClicked: () => keyClicked,
+        clickedKey: () => clickedKey,
         isKeyPressed,
         isLeftMouse,
         isRightMouse,
         keyPressedFunc,
+        keyClickedFunc,
         mouseClickedFunc,
         leftMouse,
         rightMouse,
@@ -781,6 +800,13 @@ export class CodeInterpreter {
 
       // Store clearButtons function for use in loop
       (this as any).clearButtons = clearButtons;
+      
+      // Function to reset keyClicked state at start of each frame
+      const resetKeyClicked = () => {
+        keyClicked = false;
+        clickedKey = null;
+      };
+      (this as any).resetKeyClicked = resetKeyClicked;
       
       // Start animation loop if loop() function is defined
       if (this.loopFunction) {
