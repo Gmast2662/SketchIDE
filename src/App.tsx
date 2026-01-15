@@ -37,6 +37,7 @@ function App() {
     return localStorage.getItem('hasSeenWelcome') === 'true';
   });
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const [showUpdateNotification, setShowUpdateNotification] = useState(false);
   // Version is injected at build time from package.json via Vite define
   // Fallback to import.meta.env.VITE_APP_VERSION if __APP_VERSION__ is not available
   const getCurrentVersion = () => {
@@ -75,14 +76,44 @@ function App() {
     return () => clearTimeout(autoSaveTimer);
   }, [code, currentFilePath]);
 
-  // Check for updates (check package.json version vs stored latest version)
+  // Check for updates from GitHub Releases
   useEffect(() => {
     const checkForUpdates = async () => {
-      // In a real app, you'd check against a remote endpoint or GitHub releases
-      // For now, we'll check against a version stored in localStorage
-      const storedLatestVersion = localStorage.getItem('latestVersion');
-      if (storedLatestVersion && storedLatestVersion !== currentVersion) {
-        setLatestVersion(storedLatestVersion);
+      try {
+        const GITHUB_REPO = 'Gmast2662/SketchIDE';
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+          },
+        });
+        
+        if (!response.ok) {
+          // If API fails, fall back to localStorage for testing
+          const storedLatestVersion = localStorage.getItem('latestVersion');
+          if (storedLatestVersion && storedLatestVersion !== currentVersion) {
+            setLatestVersion(storedLatestVersion);
+          }
+          return;
+        }
+        
+        const data = await response.json();
+        // Remove 'v' prefix if present (e.g., 'v1.0.1' -> '1.0.1')
+        const latestVersionFromGitHub = data.tag_name.replace(/^v/, '');
+        
+        // Compare versions (simple string comparison works for semantic versioning)
+        if (latestVersionFromGitHub && latestVersionFromGitHub !== currentVersion) {
+          setLatestVersion(latestVersionFromGitHub);
+          setShowUpdateNotification(true);
+        }
+      } catch (error) {
+        // Silent fail - don't show errors for update checks
+        console.log('Update check failed (this is normal if not configured):', error);
+        
+        // Fall back to localStorage for testing
+        const storedLatestVersion = localStorage.getItem('latestVersion');
+        if (storedLatestVersion && storedLatestVersion !== currentVersion) {
+          setLatestVersion(storedLatestVersion);
+        }
       }
     };
 
@@ -349,10 +380,13 @@ function App() {
 
   // Save project (Ctrl+S - saves existing or shows dialog if new)
   const handleSaveProject = useCallback(async () => {
+    console.log('Save project called');
     const isElectron = typeof window !== 'undefined' && (window as any).electronAPI;
+    console.log('Is Electron:', isElectron, 'electronAPI:', (window as any).electronAPI);
     
     // If we have a saved file path, save to that file
     if (currentFilePath) {
+      console.log('Saving to existing file:', currentFilePath);
       if (isElectron) {
         try {
           await (window as any).electronAPI.writeFile(currentFilePath, code);
@@ -369,17 +403,24 @@ function App() {
     // Otherwise, show save dialog (or prompt in web)
     if (isElectron) {
       try {
+        console.log('Getting sketchbook path...');
         const sketchbookPath = await (window as any).electronAPI.getSketchbookPath();
+        console.log('Sketchbook path:', sketchbookPath);
         const defaultName = currentProject?.name || 'Untitled Project';
         // Use forward slashes for Electron paths (works on Windows too)
         const defaultPath = `${sketchbookPath}/${defaultName}.art`;
         
+        console.log('Showing save dialog...');
         const result = await (window as any).electronAPI.showSaveDialog({
           title: 'Save Sketch',
           defaultPath: defaultPath,
         });
         
-        if (result.canceled || !result.filePath) return;
+        console.log('Save dialog result:', result);
+        if (result.canceled || !result.filePath) {
+          console.log('Save dialog canceled');
+          return;
+        }
         
         const filePath = result.filePath;
         await (window as any).electronAPI.writeFile(filePath, code);
@@ -685,18 +726,18 @@ function App() {
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
 
       {/* Update Notification */}
-      {latestVersion && (
+      {showUpdateNotification && latestVersion && (
         <UpdateNotification
           version={currentVersion}
           latestVersion={latestVersion}
           onUpdate={() => {
-            // Open download page or trigger update
-            window.open('https://github.com/yourusername/sketchide/releases', '_blank');
+            const GITHUB_REPO = 'Gmast2662/SketchIDE';
+            window.open(`https://github.com/${GITHUB_REPO}/releases/latest`, '_blank');
           }}
           onDismiss={() => {
             // Store dismissed version to not show again
             localStorage.setItem('updateDismissed', latestVersion);
-            setLatestVersion(null);
+            setShowUpdateNotification(false);
           }}
         />
       )}

@@ -60,10 +60,17 @@ function createWindow() {
 
 // This method will be called when Electron has finished initialization
 app.whenReady().then(async () => {
-  // Ensure sketchbook folder exists on startup
+  // Ensure sketchbook folder exists on startup (in app installation directory)
   try {
-    const userDataPath = app.getPath('userData');
-    const sketchbookPath = path.join(userDataPath, 'sketchbook');
+    let appPath;
+    if (app.isPackaged) {
+      // In production, use the directory where the executable is
+      appPath = path.dirname(process.execPath);
+    } else {
+      // In development, use the project root
+      appPath = path.join(__dirname, '..');
+    }
+    const sketchbookPath = path.join(appPath, 'sketchbook');
     await fs.mkdir(sketchbookPath, { recursive: true });
     console.log('Sketchbook folder ready:', sketchbookPath);
   } catch (error) {
@@ -100,8 +107,17 @@ ipcMain.handle('get-app-path', () => {
 });
 
 ipcMain.handle('get-sketchbook-path', async () => {
-  const userDataPath = app.getPath('userData');
-  const sketchbookPath = path.join(userDataPath, 'sketchbook');
+  // Use app installation directory (where the .exe is) instead of AppData
+  let appPath;
+  if (app.isPackaged) {
+    // In production, use the directory where the executable is
+    appPath = path.dirname(process.execPath);
+  } else {
+    // In development, use the project root
+    appPath = path.join(__dirname, '..');
+  }
+  
+  const sketchbookPath = path.join(appPath, 'sketchbook');
   
   // Ensure sketchbook directory exists
   try {

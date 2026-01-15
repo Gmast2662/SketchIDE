@@ -572,7 +572,10 @@ export class CodeInterpreter {
         // Replace function declarations with arrow functions
         // Match: function name(params) { and replace with: const name = (params) => {
         // Handle both empty and non-empty parameter lists
+        // If setup() contains input() calls, make it async automatically
+        .replace(/\bfunction\s+(setup)\s*\(\)\s*\{/g, 'const $1 = async () => {')
         .replace(/\bfunction\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = () => {')
+        .replace(/\bfunction\s+(setup)\s*\(([^)]+)\)\s*\{/g, 'const $1 = async ($2) => {')
         .replace(/\bfunction\s+(\w+)\s*\(([^)]+)\)\s*\{/g, 'const $1 = ($2) => {')
         // Support async functions
         .replace(/\basync\s+function\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = async () => {')
@@ -702,7 +705,9 @@ export class CodeInterpreter {
           });
           
           // Replace function calls FIRST (before variable replacements)
-          code = code            .replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
+          // Replace input() calls with await to handle async properly (sequential dialogs)
+          code = code.replace(/\binput\s*\(/g, 'await input(')
+            .replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
             .replace(/\bisLeftMouse\s*\(/g, 'isLeftMouse(')
             .replace(/\bisRightMouse\s*\(/g, 'isRightMouse(')
             // Replace keyPressed() function calls (but not the variable)
@@ -733,7 +738,7 @@ export class CodeInterpreter {
           
           return code;
         })() +
-        '\n\nreturn (async function() { if (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { await setupResult.catch(err => { throw err; }); } } return typeof loop === "function" ? (async function loopWrapper() { await loop(); }) : null; })();'
+        '\n\nreturn (async function() { if (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { await setupResult; } } return typeof loop === "function" ? (async function loopWrapper() { await loop(); }) : null; })();'
       );
 
       // Run the code and get loop function if defined
