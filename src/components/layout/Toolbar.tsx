@@ -24,65 +24,82 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   projectName,
 }) => {
   return (
-    <div className="bg-[#F5F5F5] border-b border-[#D3D3D3] px-0 py-0 flex items-center h-8 shadow-sm">
-      {/* Left side - File operations */}
-      <div className="flex items-center h-full">
-        <button
-          onClick={onNew}
-          className="px-4 py-1 h-full text-sm text-[#333] hover:bg-[#E0E0E0] transition-colors"
-          title="New Project (Ctrl+N)"
-        >
-          New
-        </button>
-        <button
-          onClick={onOpen}
-          className="px-4 py-1 h-full text-sm text-[#333] hover:bg-[#E0E0E0] transition-colors"
-          title="Open Project (Ctrl+O)"
-        >
-          Open
-        </button>
-        <button
-          onClick={onSave}
-          className="px-4 py-1 h-full text-sm text-[#333] hover:bg-[#E0E0E0] transition-colors"
-          title="Save Project (Ctrl+S)"
-        >
-          Save
-        </button>
-        <div className="w-px h-5 bg-[#D3D3D3] mx-1" />
-        {/* Prominent Run button - Processing style */}
-        <button
-          onClick={onRun}
-          disabled={isRunning}
-          className="px-4 py-1 h-full text-sm font-medium text-white bg-[#0066CC] hover:bg-[#0052A3] disabled:opacity-50 disabled:cursor-not-allowed transition-colors ml-1 flex items-center gap-1"
-          title="Run Code (Ctrl+R)"
-        >
-          <Play className="w-3 h-3 fill-current" />
-          <span>Run</span>
-        </button>
-        <button
-          onClick={onStop}
-          disabled={!isRunning}
-          className="px-4 py-1 h-full text-sm text-[#333] hover:bg-[#E0E0E0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="Stop Execution"
-        >
-          Stop
-        </button>
-      </div>
+    <div className="bg-[#2D2D30] border-b border-ide-border px-4 py-2 flex items-center gap-2">
+      {/* Run/Stop buttons */}
+      <button
+        onClick={onRun}
+        disabled={isRunning}
+        className="flex items-center gap-2 px-4 py-2 bg-ide-success text-white rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        title="Run Code (Ctrl+R)"
+      >
+        <Play className="w-4 h-4" />
+        <span className="font-medium">Run</span>
+      </button>
 
-      {/* Right side - Help and settings */}
-      <div className="flex-1" />
-      <div className="flex items-center h-full">
-        <button
-          onClick={onClear}
-          className="px-4 py-1 h-full text-sm text-[#333] hover:bg-[#E0E0E0] transition-colors"
-          title="Clear Console (Ctrl+Shift+C)"
-        >
-          Clear
-        </button>
-        <div className="w-px h-5 bg-[#D3D3D3] mx-1" />
-        <div className="px-3 text-xs text-[#666]">
+      <button
+        onClick={onStop}
+        disabled={!isRunning}
+        className="flex items-center gap-2 px-4 py-2 bg-ide-error text-white rounded hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        title="Stop Execution"
+      >
+        <Square className="w-4 h-4" />
+        <span className="font-medium">Stop</span>
+      </button>
+
+      <div className="w-px h-6 bg-ide-border mx-1" />
+
+      {/* File operations */}
+      <button
+        onClick={onNew}
+        className="p-2 text-ide-text hover:bg-ide-panel rounded transition-colors"
+        title="New Project (Ctrl+N)"
+      >
+        <FilePlus className="w-4 h-4" />
+      </button>
+
+      <button
+        onClick={onOpen}
+        className="p-2 text-ide-text hover:bg-ide-panel rounded transition-colors"
+        title="Open Project (Ctrl+O)"
+      >
+        <FolderOpen className="w-4 h-4" />
+      </button>
+
+      <button
+        onClick={onSave}
+        className="p-2 text-ide-text hover:bg-ide-panel rounded transition-colors"
+        title="Save Project (Ctrl+S)"
+      >
+        <Save className="w-4 h-4" />
+      </button>
+
+      <div className="w-px h-6 bg-ide-border mx-1" />
+
+      <button
+        onClick={onClear}
+        className="p-2 text-ide-text hover:bg-ide-panel rounded transition-colors"
+        title="Clear Console (Ctrl+Shift+C)"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+
+      {/* Project name */}
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-sm text-ide-text font-medium">
           {projectName}
         </div>
+      </div>
+
+      {/* Status indicator */}
+      <div className="flex items-center gap-2">
+        <div
+          className={`w-2 h-2 rounded-full ${
+            isRunning ? 'bg-ide-success animate-pulse' : 'bg-ide-textDim'
+          }`}
+        />
+        <span className="text-xs text-ide-textDim">
+          {isRunning ? 'Running' : 'Ready'}
+        </span>
       </div>
     </div>
   );

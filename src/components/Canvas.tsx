@@ -34,11 +34,11 @@ export const Canvas: React.FC<CanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-[#E8E8E8] flex items-center justify-center p-4 overflow-auto"
+      className="w-full h-full bg-ide-bg flex items-center justify-center p-4 overflow-auto"
     >
       <canvas
         ref={canvasRef}
-        className="border border-[#CCC] shadow-md bg-white"
+        className="border border-ide-border shadow-lg bg-white"
         style={{ maxWidth: '100%', height: 'auto' }}
       />
     </div>

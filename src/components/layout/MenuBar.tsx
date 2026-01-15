@@ -53,11 +53,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   ];
 
   return (
-    <div className="bg-[#F5F5F5] border-b border-[#D3D3D3] px-2 py-1 flex items-center gap-1 h-7">
+    <div className="bg-[#323233] border-b border-ide-border px-2 py-1 flex items-center gap-1">
       {menus.map((menu) => (
         <div key={menu.id} className="relative">
           <button
-            className="px-3 py-1 text-sm text-[#333] hover:bg-[#E0E0E0] transition-colors"
+            className="px-3 py-1 text-sm text-ide-text hover:bg-ide-panel rounded transition-colors"
             onClick={() => setOpenMenu(openMenu === menu.id ? null : menu.id)}
           >
             {menu.label}
@@ -69,11 +69,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({
                 className="fixed inset-0 z-10"
                 onClick={() => setOpenMenu(null)}
               />
-              <div className="absolute top-full left-0 mt-1 bg-white border border-[#D3D3D3] rounded shadow-lg z-20 min-w-[180px]">
+              <div className="absolute top-full left-0 mt-1 bg-ide-panel border border-ide-border rounded shadow-lg z-20 min-w-[180px]">
                 {menu.items.map((item, index) => (
                   <button
                     key={index}
-                    className="w-full px-4 py-2 text-sm text-[#333] hover:bg-[#F0F0F0] text-left flex items-center justify-between group"
+                    className="w-full px-4 py-2 text-sm text-ide-text hover:bg-ide-toolbar text-left flex items-center justify-between group"
                     onClick={() => {
                       item.action();
                       setOpenMenu(null);
@@ -81,7 +81,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
                   >
                     <span>{item.label}</span>
                     {item.shortcut && (
-                      <span className="text-xs text-[#999] ml-4">
+                      <span className="text-xs text-ide-textDim ml-4">
                         {item.shortcut}
                       </span>
                     )}
@@ -95,8 +95,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({
 
       <div className="flex-1" />
 
-      <div className="text-xs text-[#999] px-3">
-        Processing IDE v1.0
+      <div className="text-xs text-ide-textDim px-3">
+        CodeCanvas v1.0
       </div>
     </div>
   );
