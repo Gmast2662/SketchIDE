@@ -108,8 +108,10 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
   const shortcuts = [
     { keys: 'Ctrl + R', action: 'Run code' },
     { keys: 'Ctrl + S', action: 'Save project' },
+    { keys: 'Ctrl + Shift + S', action: 'Save As (new file)' },
     { keys: 'Ctrl + N', action: 'New project' },
     { keys: 'Ctrl + O', action: 'Open project' },
+    { keys: 'Ctrl + Shift + F', action: 'Format code' },
     { keys: 'Ctrl + Shift + C', action: 'Clear console' },
   ];
 

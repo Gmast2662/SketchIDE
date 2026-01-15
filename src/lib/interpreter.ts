@@ -5,7 +5,7 @@ interface InterpreterContext {
   canvas: HTMLCanvasElement;
   ctx: CanvasRenderingContext2D;
   print: (message: string) => void;
-  input: (prompt: string) => string | null;
+  input: (prompt: string) => Promise<string | null> | string | null;
   requestStop: () => boolean;
   onResize?: (width: number, height: number) => void;
 }

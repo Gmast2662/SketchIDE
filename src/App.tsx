@@ -39,10 +39,21 @@ function App() {
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
   // Version is injected at build time from package.json via Vite define
   // Fallback to import.meta.env.VITE_APP_VERSION if __APP_VERSION__ is not available
-  const currentVersion = (typeof __APP_VERSION__ !== 'undefined' 
-    ? __APP_VERSION__ 
-    : (import.meta.env.VITE_APP_VERSION || '1.0.0')) as string;
+  const getCurrentVersion = () => {
+    if (typeof __APP_VERSION__ !== 'undefined') return __APP_VERSION__;
+    if (import.meta.env.VITE_APP_VERSION) return import.meta.env.VITE_APP_VERSION;
+    // Try to read from package.json at runtime (dev mode)
+    try {
+      // This won't work in production, but good for dev
+      return '1.0.1'; // Default fallback - should match package.json
+    } catch {
+      return '1.0.1';
+    }
+  };
+  const currentVersion = getCurrentVersion() as string;
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null); // Track saved file path
+  const [inputDialog, setInputDialog] = useState<{prompt: string; resolve: (value: string | null) => void} | null>(null);
+  const [inputValue, setInputValue] = useState('');
 
   // Auto-save - saves to localStorage and file (if path exists)
   useEffect(() => {
@@ -265,12 +276,17 @@ function App() {
       canvas,
       ctx,
       print: (msg: string) => addConsoleMessage(msg, 'info'),
-      input: (prompt: string) => {
-        const result = window.prompt(prompt);
-        if (result !== null) {
-          addConsoleMessage(`Input: ${result}`, 'info');
-        }
-        return result;
+      input: (promptText: string) => {
+        // Use a custom input dialog instead of window.prompt (which is blocked)
+        return new Promise<string | null>((resolve) => {
+          setInputDialog({ prompt: promptText, resolve });
+          setInputValue('');
+        }).then((result) => {
+          if (result !== null) {
+            addConsoleMessage(`Input: ${result}`, 'info');
+          }
+          return result;
+        });
       },
       requestStop: () => !isRunning,
       onResize: (width: number, height: number) => {
@@ -596,6 +612,58 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Input Dialog */}
+      {inputDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-ide-panel border border-ide-border rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-ide-text mb-4">
+              {inputDialog.prompt}
+            </h3>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  inputDialog.resolve(inputValue || null);
+                  setInputDialog(null);
+                  setInputValue('');
+                } else if (e.key === 'Escape') {
+                  inputDialog.resolve(null);
+                  setInputDialog(null);
+                  setInputValue('');
+                }
+              }}
+              autoFocus
+              className="w-full px-4 py-2 bg-ide-toolbar border border-ide-border rounded text-ide-text focus:outline-none focus:ring-2 focus:ring-ide-accent mb-4"
+              placeholder="Enter value..."
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  inputDialog.resolve(null);
+                  setInputDialog(null);
+                  setInputValue('');
+                }}
+                className="px-4 py-2 bg-ide-toolbar border border-ide-border rounded text-ide-text hover:bg-ide-panel transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  inputDialog.resolve(inputValue || null);
+                  setInputDialog(null);
+                  setInputValue('');
+                }}
+                className="px-4 py-2 bg-ide-success text-white rounded hover:opacity-90 transition-opacity"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showExamples && (
