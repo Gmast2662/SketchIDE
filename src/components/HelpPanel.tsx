@@ -52,11 +52,11 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
       items: [
         {
           name: 'function setup() { }',
-          description: 'Runs once at the start',
+          description: 'Runs once at the start. Use for initialization. Key/mouse checks should go in loop()',
         },
         {
           name: 'function loop() { }',
-          description: 'Runs repeatedly for animation',
+          description: 'Runs repeatedly for animation. Use this for key/mouse input checks',
         },
         { name: 'print(message)', description: 'Output to console' },
         { name: 'input(prompt)', description: 'Get user input' },
@@ -80,8 +80,12 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'keyPressed', description: 'True if any key is currently pressed' },
         { name: 'key', description: 'The key that was pressed (string like "a", "Enter", "Space")' },
         { name: 'isKeyPressed("key")', description: 'Check if a specific key is pressed. Example: isKeyPressed("a") or isKeyPressed("Space")' },
+        { name: 'isKeyPressed("a" or "A")', description: 'Check if EITHER key is pressed (OR logic). Example: isKeyPressed("a" or "A") checks for lowercase or uppercase' },
         { name: 'keyPressed("key1", "key2", ...)', description: 'Check if ALL of multiple keys are pressed (AND logic). Example: keyPressed("a", "Space") requires both "a" AND "Space" to be pressed' },
         { name: 'mouseClicked("left", "right")', description: 'Check if any mouse button was clicked. Use: mouseClicked("left", "right") or mouseClicked(leftMouse, rightMouse)' },
+        { name: 'button(x, y, w, h, id)', description: 'Create a button at position (x,y) with size (w,h) and id. Returns button object' },
+        { name: 'buttonClicked(id)', description: 'Check if a button with the given id was clicked. Example: if (buttonClicked("myButton")) { }' },
+        { name: 'buttonId(clicked)', description: 'Alternative syntax: if (myButton(clicked)) { } checks if button "myButton" was clicked' },
       ],
     },
     {

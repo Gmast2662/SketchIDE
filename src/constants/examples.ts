@@ -702,10 +702,13 @@ function loop() {
     name: 'Mouse & Keyboard Input',
     category: 'Basics',
     code: `// Detect mouse clicks and key presses
+// IMPORTANT: keyPressed() checks must be in loop(), not setup()
+// setup() only runs once at the start, so keys won't be pressed yet
 
 function setup() {
   background(255, 255, 255)
   print("Click the canvas or press keys!")
+  print("Press 'a' to see a message!")
 }
 
 function loop() {
@@ -777,6 +780,127 @@ function loop() {
     ellipse(mouseX, mouseY, 25, 25)
     print("Key pressed: " + key)
   }
+  
+  // Example: Check for single key
+  if (isKeyPressed("a")) {
+    print("A key is pressed!")
+  }
+}`,
+  },
+  {
+    id: 'keypress-example',
+    name: 'Key Press Example',
+    category: 'Basics',
+    code: `// Example showing why key checks must be in loop()
+
+function setup() {
+  background(255, 255, 255)
+  print("This runs once at the start")
+  print("Keys won't be pressed yet, so this won't work:")
+  
+  // This WON'T work - setup() runs before you can press keys
+  if (keyPressed("a")) {
+    print("This will never print!")
+  }
+}
+
+function loop() {
+  // This WILL work - loop() runs continuously
+  if (isKeyPressed("a")) {
+    print("A key is pressed!")
+  }
+  
+  // Check for multiple keys (ALL must be pressed)
+  if (keyPressed("a", "Space")) {
+    print("Both 'a' AND 'Space' are pressed!")
+  }
+}`,
+  },
+  {
+    id: 'user-password-system',
+    name: 'User/Password System',
+    category: 'Advanced',
+    code: `// User/Password System
+// Enter username and password, display username
+// Press 'p' to reset password
+
+let user = {name: "", password: ""}
+let savedPassword = ""
+
+function setup() {
+  background(255, 255, 255)
+  
+  // Get username and password
+  user.name = input("Username:")
+  user.password = input("Password:")
+  
+  // Encrypt and save password
+  savedPassword = encrypt(user.password)
+  print("Password saved!")
+  print("Username: " + user.name)
+}
+
+function loop() {
+  background(255, 255, 255)
+  
+  // Display username
+  fill(0, 0, 0)
+  text("User: " + user.name, 20, 50, 20)
+  
+  // Check if 'p' is pressed to reset password
+  if (isKeyPressed("p") or isKeyPressed("P")) {
+    let newPassword = input("Enter new password:")
+    savedPassword = encrypt(newPassword)
+    print("Password updated!")
+  }
+  
+  // Display status
+  fill(100, 100, 100)
+  text("Press 'p' to reset password", 20, 100, 14)
+}`,
+  },
+  {
+    id: 'button-example',
+    name: 'Button System',
+    category: 'Advanced',
+    code: `// Button System Example
+// Create buttons and check if they're clicked
+
+function setup() {
+  background(255, 255, 255)
+  size(400, 300)
+}
+
+function loop() {
+  background(255, 255, 255)
+  
+  // Create buttons
+  button(50, 50, 100, 40, "start")
+  button(200, 50, 100, 40, "stop")
+  button(50, 120, 100, 40, "reset")
+  
+  // Check if buttons are clicked (method 1)
+  if (buttonClicked("start")) {
+    fill(100, 255, 100)
+    ellipse(200, 200, 50, 50)
+    print("Start button clicked!")
+  }
+  
+  // Check if button is clicked (method 2 - easier syntax)
+  if (stop(clicked)) {
+    fill(255, 100, 100)
+    ellipse(200, 200, 50, 50)
+    print("Stop button clicked!")
+  }
+  
+  if (reset(clicked)) {
+    background(255, 255, 255)
+    print("Reset button clicked!")
+  }
+  
+  // Draw instructions
+  fill(0, 0, 0)
+  text("Click the buttons above!", 50, 250, 14)
 }`,
   },
 ];

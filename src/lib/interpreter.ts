@@ -341,8 +341,9 @@ export class CodeInterpreter {
         // Don't capture IDE shortcuts
         if (e.ctrlKey || e.metaKey) return;
         keyPressed = true;
-        currentKey = e.key;
         pressedKeys.add(e.key);
+        // Set currentKey to the most recently pressed key
+        currentKey = e.key;
       };
       
       const handleKeyUp = (e: KeyboardEvent) => {
@@ -351,7 +352,7 @@ export class CodeInterpreter {
         if (pressedKeys.size === 0) {
           currentKey = '';
         } else {
-          // Set currentKey to the last remaining key
+          // Set currentKey to the most recently pressed key that's still down
           const keys = Array.from(pressedKeys);
           currentKey = keys[keys.length - 1];
         }
@@ -377,7 +378,25 @@ export class CodeInterpreter {
       
       // Helper function to check if a specific key is pressed
       const isKeyPressed = (key: string): boolean => {
-        return pressedKeys.has(key) || currentKey === key;
+        // Check if the key is in the pressedKeys set
+        // Handle case-insensitive matching and common variations
+        const normalizedKey = key.trim();
+        
+        // Direct match
+        if (pressedKeys.has(normalizedKey)) return true;
+        if (currentKey === normalizedKey) return true;
+        
+        // Case-insensitive match
+        for (const pressedKey of pressedKeys) {
+          if (pressedKey.toLowerCase() === normalizedKey.toLowerCase()) {
+            return true;
+          }
+        }
+        if (currentKey.toLowerCase() === normalizedKey.toLowerCase()) {
+          return true;
+        }
+        
+        return false;
       };
       
       // Check if ALL of multiple keys are pressed (AND logic)
@@ -412,6 +431,48 @@ export class CodeInterpreter {
       const leftMouse = 0;
       const rightMouse = 2;
       const middleMouse = 1;
+
+      // Button system - create and check buttons
+      const buttons: Map<string, { x: number; y: number; w: number; h: number; clicked: boolean }> = new Map();
+      
+      const button = (x: number, y: number, w: number, h: number, id: string) => {
+        // Create or update a button
+        const btn = buttons.get(id) || { x, y, w, h, clicked: false };
+        btn.x = x;
+        btn.y = y;
+        btn.w = w;
+        btn.h = h;
+        
+        // Check if button was clicked this frame
+        if (mouseClicked && mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
+          btn.clicked = true;
+        } else {
+          btn.clicked = false;
+        }
+        
+        buttons.set(id, btn);
+        
+        // Draw the button
+        fill(200, 200, 200);
+        rect(x, y, w, h);
+        fill(0, 0, 0);
+        text(id, x + 10, y + h/2 + 5, 14);
+        
+        return btn;
+      };
+      
+      // Check if a button was clicked
+      const buttonClicked = (id: string): boolean => {
+        const btn = buttons.get(id);
+        return btn ? btn.clicked : false;
+      };
+      
+      // Clear button click states (call this at start of each frame)
+      const clearButtons = () => {
+        buttons.forEach(btn => {
+          btn.clicked = false;
+        });
+      };
 
       // Decryption function - reverses the encryption
       const decrypt = (encryptedData: string): string => {
@@ -507,7 +568,10 @@ export class CodeInterpreter {
         .replace(/\basync\s+function\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = async () => {')
         .replace(/\basync\s+function\s+(\w+)\s*\(([^)]+)\)\s*\{/g, 'const $1 = async ($2) => {')
         // Support async arrow functions (already async)
-        .replace(/\basync\s+\(/g, 'async (');
+        .replace(/\basync\s+\(/g, 'async (')
+        // Transform isKeyPressed("a" or "A") to check both keys
+        .replace(/isKeyPressed\s*\(\s*"([^"]+)"\s+or\s+"([^"]+)"\s*\)/g, '(isKeyPressed("$1") || isKeyPressed("$2"))')
+        .replace(/isKeyPressed\s*\(\s*'([^']+)'\s+or\s+'([^']+)'\s*\)/g, "(isKeyPressed('$1') || isKeyPressed('$2'))");
       
       // Restore strings
       stringPlaceholders.forEach((str, index) => {
@@ -605,6 +669,9 @@ export class CodeInterpreter {
         'leftMouse',
         'rightMouse',
         'middleMouse',
+        'button',
+        'buttonClicked',
+        'clearButtons',
         'canvas',
         'Math',
         'Promise',
@@ -620,13 +687,18 @@ export class CodeInterpreter {
           });
           
           // Replace function calls FIRST (before variable replacements)
-          code = code.replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
+          code = code            .replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
             .replace(/\bisLeftMouse\s*\(/g, 'isLeftMouse(')
             .replace(/\bisRightMouse\s*\(/g, 'isRightMouse(')
             // Replace keyPressed() function calls (but not the variable)
             .replace(/\bkeyPressed\s*\(/g, 'keyPressedFunc(')
             // Replace mouseClicked() function calls (but not the variable)
             .replace(/\bmouseClicked\s*\(/g, 'mouseClickedFunc(')
+            // Replace button() calls
+            .replace(/\bbutton\s*\(/g, 'button(')
+            // Replace buttonClicked() calls and buttonId(clicked) syntax
+            .replace(/\b(\w+)\s*\(\s*clicked\s*\)/g, 'buttonClicked("$1")')
+            .replace(/\bbuttonClicked\s*\(/g, 'buttonClicked(')
             // Now replace variables (after function calls)
             .replace(/\bmouseX\b/g, 'getMouseX()')
             .replace(/\bmouseY\b/g, 'getMouseY()')
@@ -699,11 +771,17 @@ export class CodeInterpreter {
         leftMouse,
         rightMouse,
         middleMouse,
+        button,
+        buttonClicked,
+        clearButtons,
         canvas,
         Math,
         Promise
       );
 
+      // Store clearButtons function for use in loop
+      (this as any).clearButtons = clearButtons;
+      
       // Start animation loop if loop() function is defined
       if (this.loopFunction) {
         this.startLoop();
@@ -727,6 +805,10 @@ export class CodeInterpreter {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
+        // Clear button states at start of frame
+        if ((this as any).clearButtons) {
+          (this as any).clearButtons();
+        }
         this.loopFunction();
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
