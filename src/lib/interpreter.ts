@@ -498,17 +498,16 @@ export class CodeInterpreter {
         .replace(/\band\b/g, '&&')
         // Replace 'not' with '!' (word boundary ensures it doesn't match in 'note', 'notify', etc.)
         .replace(/\bnot\b/g, '!')
-        // Replace function with const arrow function - only match function declarations
-        .replace(/\bfunction\s+(\w+)\s*\(/g, 'const $1 = (')
-        // Replace ) { with ) => { but only for function definitions
-        .replace(/\)\s*\{/g, ') => {')
+        // Replace function declarations with arrow functions
+        // Match: function name(params) { and replace with: const name = (params) => {
+        // Handle both empty and non-empty parameter lists
+        .replace(/\bfunction\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = () => {')
+        .replace(/\bfunction\s+(\w+)\s*\(([^)]+)\)\s*\{/g, 'const $1 = ($2) => {')
         // Support async functions
-        .replace(/\basync\s+function\s+(\w+)\s*\(/g, 'const $1 = async (')
-        // Support async arrow functions
-        .replace(/\basync\s+\(/g, 'async (')
-        // Transform delay() calls to automatically await in async contexts
-        // For non-async functions, delay will still work but won't block
-        .replace(/\bdelay\s*\(/g, 'await delay(');
+        .replace(/\basync\s+function\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = async () => {')
+        .replace(/\basync\s+function\s+(\w+)\s*\(([^)]+)\)\s*\{/g, 'const $1 = async ($2) => {')
+        // Support async arrow functions (already async)
+        .replace(/\basync\s+\(/g, 'async (');
       
       // Restore strings
       stringPlaceholders.forEach((str, index) => {
@@ -643,7 +642,7 @@ export class CodeInterpreter {
           
           return code;
         })() +
-        '\n\n// Wrap in async to support delay()\nreturn (async () => {\n  if (typeof setup === "function") { \n    const setupResult = setup(); \n    if (setupResult && typeof setupResult.then === "function") { \n      await setupResult.catch(err => { throw err; }); \n    } \n  }\n  return typeof loop === "function" ? (async () => { await loop(); }) : null;\n})();'
+        '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? loop : null;'
       );
 
       // Run the code and get loop function if defined
@@ -724,15 +723,11 @@ export class CodeInterpreter {
   private startLoop(): void {
     if (!this.loopFunction || this.stopRequested) return;
 
-    const animate = async () => {
+    const animate = () => {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
-        const result = this.loopFunction();
-        // If loop returns a promise (from delay), wait for it without blocking UI
-        if (result && typeof result.then === 'function') {
-          await result;
-        }
+        this.loopFunction();
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
