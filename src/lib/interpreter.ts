@@ -274,17 +274,31 @@ export class CodeInterpreter {
         return `ENC:${saltEncoded}:${timeEncoded}:${base64}`;
       };
 
-      // Delay function - like Lua's task.delay, pauses execution
-      // Accepts seconds (0.1 = 100ms), works without await
-      const delay = (seconds: number): void => {
+      // Delay function - like Lua's task.delay, pauses execution without blocking UI
+      // Accepts seconds (0.1 = 100ms)
+      // For very short delays, uses synchronous wait (acceptable blocking)
+      // For longer delays, uses setTimeout (non-blocking)
+      const delay = (seconds: number): void | Promise<void> => {
         const milliseconds = seconds * 1000;
-        if (milliseconds <= 0) return;
+        if (milliseconds <= 0) {
+          return;
+        }
         
-        // For very short delays, use synchronous wait (blocks)
-        // For longer delays, this will still work but may cause browser warnings
-        const start = Date.now();
-        while (Date.now() - start < milliseconds) {
-          // Busy wait - blocks execution
+        // For delays < 50ms, use synchronous wait (acceptable for UI)
+        // For longer delays, use setTimeout (non-blocking)
+        if (milliseconds < 50) {
+          const start = Date.now();
+          while (Date.now() - start < milliseconds) {
+            // Busy wait - blocks but only for very short times
+          }
+          return;
+        } else {
+          // For longer delays, return a promise that will be handled by async code
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve();
+            }, milliseconds);
+          });
         }
       };
 
@@ -380,7 +394,10 @@ export class CodeInterpreter {
         // Support async functions
         .replace(/\basync\s+function\s+(\w+)\s*\(/g, 'const $1 = async (')
         // Support async arrow functions
-        .replace(/\basync\s+\(/g, 'async (');
+        .replace(/\basync\s+\(/g, 'async (')
+        // Transform delay() calls to automatically await in async contexts
+        // For non-async functions, delay will still work but won't block
+        .replace(/\bdelay\s*\(/g, 'await delay(');
       
       // Restore strings
       stringPlaceholders.forEach((str, index) => {
@@ -424,6 +441,7 @@ export class CodeInterpreter {
       };
       
       // Execute the transformed code with error tracking
+      // Make it async to support delay()
       const userCode = new Function(
         'size',
         'background',
@@ -469,17 +487,42 @@ export class CodeInterpreter {
         'getMouseClicked',
         'getKeyPressed',
         'getKey',
+        'isKeyPressed',
+        'isLeftMouse',
+        'isRightMouse',
         'canvas',
         'Math',
         'Promise',
         // Inject mouse/key as variables in the code
-        transformedCode.replace(/\bmouseX\b/g, 'getMouseX()')
-          .replace(/\bmouseY\b/g, 'getMouseY()')
-          .replace(/\bmousePressed\b/g, 'getMousePressed()')
-          .replace(/\bmouseClicked\b/g, 'getMouseClicked()')
-          .replace(/\bkeyPressed\b/g, 'getKeyPressed()')
-          .replace(/\bkey\b(?!\w)/g, 'getKey()') +
-        '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? loop : null;'
+        (() => {
+          let code = transformedCode;
+          // Protect strings from replacement
+          const strPlaceholders: string[] = [];
+          code = code.replace(/(["'])((?:\\.|(?!\1).)*?)\1/g, (match) => {
+            const placeholder = `__STR2_${strPlaceholders.length}__`;
+            strPlaceholders.push(match);
+            return placeholder;
+          });
+          
+          // Replace variables
+          code = code.replace(/\bmouseX\b/g, 'getMouseX()')
+            .replace(/\bmouseY\b/g, 'getMouseY()')
+            .replace(/\bmousePressed\b/g, 'getMousePressed()')
+            .replace(/\bmouseClicked\b/g, 'getMouseClicked()')
+            .replace(/\bkeyPressed\b/g, 'getKeyPressed()')
+            .replace(/\bkey\b(?!\w)/g, 'getKey()')
+            .replace(/\bisKeyPressed\s*\(/g, 'isKeyPressed(')
+            .replace(/\bisLeftMouse\s*\(/g, 'isLeftMouse(')
+            .replace(/\bisRightMouse\s*\(/g, 'isRightMouse(');
+          
+          // Restore strings
+          strPlaceholders.forEach((str, i) => {
+            code = code.replace(`__STR2_${i}__`, str);
+          });
+          
+          return code;
+        })() +
+        '\n\n// Wrap in async to support delay()\nreturn (async () => {\n  if (typeof setup === "function") { \n    const setupResult = setup(); \n    if (setupResult && typeof setupResult.then === "function") { \n      await setupResult.catch(err => { throw err; }); \n    } \n  }\n  return typeof loop === "function" ? (async () => { await loop(); }) : null;\n})();'
       );
 
       // Run the code and get loop function if defined
@@ -528,6 +571,9 @@ export class CodeInterpreter {
         () => mouseClicked,
         () => keyPressed,
         () => currentKey,
+        isKeyPressed,
+        isLeftMouse,
+        isRightMouse,
         canvas,
         Math,
         Promise
@@ -552,11 +598,15 @@ export class CodeInterpreter {
   private startLoop(): void {
     if (!this.loopFunction || this.stopRequested) return;
 
-    const animate = () => {
+    const animate = async () => {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
-        this.loopFunction();
+        const result = this.loopFunction();
+        // If loop returns a promise (from delay), wait for it without blocking UI
+        if (result && typeof result.then === 'function') {
+          await result;
+        }
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

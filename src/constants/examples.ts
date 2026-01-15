@@ -716,11 +716,18 @@ function loop() {
   fill(100, 150, 255)
   ellipse(mouseX, mouseY, 20, 20)
   
-  // Check if mouse was clicked
-  if (mouseClicked) {
+  // Check if left mouse was clicked
+  if (mouseClicked and isLeftMouse()) {
     fill(255, 100, 100)
     ellipse(mouseX, mouseY, 40, 40)
-    print("Mouse clicked at: " + mouseX + ", " + mouseY)
+    print("Left mouse clicked at: " + mouseX + ", " + mouseY)
+  }
+  
+  // Check if right mouse was clicked
+  if (mouseClicked and isRightMouse()) {
+    fill(100, 100, 255)
+    ellipse(mouseX, mouseY, 50, 50)
+    print("Right mouse clicked!")
   }
   
   // Check if mouse is pressed
@@ -729,7 +736,20 @@ function loop() {
     ellipse(mouseX, mouseY, 30, 30)
   }
   
-  // Check if key is pressed
+  // Check if specific key is pressed
+  if (isKeyPressed("a") or isKeyPressed("A")) {
+    fill(255, 200, 100)
+    ellipse(100, 100, 50, 50)
+    print("A key is pressed!")
+  }
+  
+  if (isKeyPressed("Space")) {
+    fill(200, 100, 255)
+    ellipse(300, 100, 50, 50)
+    print("Space bar pressed!")
+  }
+  
+  // Check if any key is pressed
   if (keyPressed) {
     fill(255, 255, 100)
     ellipse(mouseX, mouseY, 25, 25)

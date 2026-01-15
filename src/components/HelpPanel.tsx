@@ -74,8 +74,11 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'mouseX, mouseY', description: 'Current mouse position on canvas' },
         { name: 'mousePressed', description: 'True if mouse button is currently pressed' },
         { name: 'mouseClicked', description: 'True if mouse was just clicked (resets after one frame)' },
+        { name: 'isLeftMouse()', description: 'Returns true if left mouse button was clicked/pressed' },
+        { name: 'isRightMouse()', description: 'Returns true if right mouse button was clicked/pressed' },
         { name: 'keyPressed', description: 'True if any key is currently pressed' },
         { name: 'key', description: 'The key that was pressed (string like "a", "Enter", "Space")' },
+        { name: 'isKeyPressed("key")', description: 'Check if a specific key is pressed. Example: isKeyPressed("a") or isKeyPressed("Space")' },
       ],
     },
     {

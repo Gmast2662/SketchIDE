@@ -118,20 +118,25 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
   const [lineCount, setLineCount] = useState(1);
   const [highlightedCode, setHighlightedCode] = useState('');
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [matchingBracket, setMatchingBracket] = useState<number | null>(null);
   
-  // Sync scroll between textarea and overlay
+  // Sync scroll between textarea, overlay, and line numbers
   useEffect(() => {
     const textarea = textareaRef.current;
     const overlay = overlayRef.current;
+    const lineNumbers = lineNumbersRef.current;
     if (!textarea || !overlay) return;
     
     const handleScroll = () => {
       overlay.scrollTop = textarea.scrollTop;
       overlay.scrollLeft = textarea.scrollLeft;
+      if (lineNumbers) {
+        lineNumbers.scrollTop = textarea.scrollTop;
+      }
     };
     
     textarea.addEventListener('scroll', handleScroll);
@@ -344,7 +349,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   return (
     <div className="flex h-full bg-[#1E1E1E] text-ide-text font-mono text-[14px] overflow-hidden">
       {/* Line numbers */}
-      <div className="bg-[#1E1E1E] px-4 py-4 text-[#858585] select-none text-right border-r border-[#3E3E42] overflow-hidden">
+      <div 
+        ref={lineNumbersRef}
+        className="bg-[#1E1E1E] px-4 py-4 text-[#858585] select-none text-right border-r border-[#3E3E42] overflow-auto"
+      >
         {Array.from({ length: lineCount }, (_, i) => {
           const lineNum = i + 1;
           const isError = errorLine !== null && errorLine === lineNum;
