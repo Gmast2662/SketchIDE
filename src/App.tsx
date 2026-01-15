@@ -41,7 +41,7 @@ function App() {
 
   // Add console message
   const addConsoleMessage = useCallback(
-    (message: string, type: ConsoleMessage['type'] = 'info') => {
+    (message: string, type: ConsoleMessage['type'] = 'info', line?: number) => {
       setConsoleMessages((prev) => [
         ...prev,
         {
@@ -49,6 +49,7 @@ function App() {
           type,
           message,
           timestamp: Date.now(),
+          line,
         },
       ]);
     },
@@ -66,12 +67,96 @@ function App() {
     // Clear console and error highlighting
     setConsoleMessages([]);
     setErrorLine(null);
+    
+    // Reset canvas size to default
+    setCanvasSize({ width: 400, height: 300 });
+    
     addConsoleMessage('Running code...', 'info');
 
     // Stop any existing execution
     if (interpreterRef.current) {
       interpreterRef.current.stop();
     }
+
+    // Helper function to extract line number from error
+    const extractLineNumber = (error: unknown, code: string): number | null => {
+      if (!(error instanceof Error)) return null;
+      
+      const errorMessage = error.message;
+      const stack = error.stack || '';
+      const codeLines = code.split('\n');
+      
+      // Try multiple patterns to extract line number
+      // Pattern 1: "line X" or "Line X" in error message
+      let match = errorMessage.match(/[Ll]ine[:\s]+(\d+)/);
+      if (match) {
+        const lineNum = parseInt(match[1], 10);
+        if (lineNum > 0 && lineNum <= codeLines.length) {
+          return lineNum;
+        }
+      }
+      
+      // Pattern 2: Syntax errors often have position information
+      // Look for "Unexpected token" or similar with position
+      match = errorMessage.match(/position[:\s]+(\d+)/i);
+      if (match) {
+        const position = parseInt(match[1], 10);
+        if (position >= 0 && position < code.length) {
+          const lineNum = code.substring(0, position).split('\n').length;
+          if (lineNum > 0 && lineNum <= codeLines.length) {
+            return lineNum;
+          }
+        }
+      }
+      
+      // Pattern 3: Look for "at <anonymous>:X:Y" in stack trace
+      // The line number after the colon is relative to the function body
+      match = stack.match(/<anonymous>:\d+:(\d+)/);
+      if (match) {
+        const lineNum = parseInt(match[1], 10);
+        // Account for the wrapper code we add (2 lines: if setup, return loop)
+        const adjustedLine = lineNum - 2;
+        if (adjustedLine > 0 && adjustedLine <= codeLines.length) {
+          return adjustedLine;
+        }
+        // If adjustment doesn't work, try the raw line number
+        if (lineNum > 0 && lineNum <= codeLines.length) {
+          return lineNum;
+        }
+      }
+      
+      // Pattern 4: Look for ":X:Y" pattern in stack (line:column)
+      const stackLines = stack.split('\n');
+      for (const stackLine of stackLines) {
+        match = stackLine.match(/:(\d+):(\d+)/);
+        if (match) {
+          const lineNum = parseInt(match[1], 10);
+          // Try to map to user code (accounting for wrapper)
+          const adjustedLine = lineNum - 2;
+          if (adjustedLine > 0 && adjustedLine <= codeLines.length) {
+            return adjustedLine;
+          }
+        }
+      }
+      
+      // Pattern 5: Look for specific error patterns that might indicate line
+      // Some errors mention the problematic code, try to find it
+      if (errorMessage.includes('is not defined') || errorMessage.includes('Cannot read')) {
+        // Try to find the variable/identifier in the code and get its line
+        const identifierMatch = errorMessage.match(/'?(\w+)'? (is not defined|Cannot read)/);
+        if (identifierMatch) {
+          const identifier = identifierMatch[1];
+          // Search for the identifier in code (simple heuristic)
+          for (let i = 0; i < codeLines.length; i++) {
+            if (codeLines[i].includes(identifier) && !codeLines[i].trim().startsWith('//')) {
+              return i + 1;
+            }
+          }
+        }
+      }
+      
+      return null;
+    };
 
     // Create interpreter context
     const context = {
@@ -99,14 +184,11 @@ function App() {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      
-      // Try to extract line number from error
-      const lineMatch = errorMessage.match(/line (\d+)/i);
-      const errorLineNum = lineMatch ? parseInt(lineMatch[1], 10) : null;
+      const errorLineNum = extractLineNumber(error, code);
       
       if (errorLineNum) {
         setErrorLine(errorLineNum);
-        addConsoleMessage(`Error on line ${errorLineNum}: ${errorMessage}`, 'error');
+        addConsoleMessage(`Error on line ${errorLineNum}: ${errorMessage}`, 'error', errorLineNum);
       } else {
         addConsoleMessage(`Error: ${errorMessage}`, 'error');
       }

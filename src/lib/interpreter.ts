@@ -36,9 +36,16 @@ export class CodeInterpreter {
     try {
       const { ctx, canvas, print, input } = this.context;
       
-      // Clear canvas before execution
+      // Reset canvas to default size and clear
+      const defaultWidth = 400;
+      const defaultHeight = 300;
+      canvas.width = defaultWidth;
+      canvas.height = defaultHeight;
+      if (this.context.onResize) {
+        this.context.onResize(defaultWidth, defaultHeight);
+      }
       ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, defaultWidth, defaultHeight);
       
       // Current drawing state
       let currentFillColor = 'black';
@@ -165,20 +172,25 @@ export class CodeInterpreter {
       const max = Math.max;
 
       // Transform code syntax
+      // Note: <= and >= operators are preserved as-is (word boundaries prevent 'or'/'and' from matching inside them)
       let transformedCode = code
         // Replace var with let
         .replace(/\bvar\b/g, 'let')
-        // Replace 'or' with '||'
+        // Replace 'or' with '||' (word boundary ensures it doesn't match in 'for', 'floor', etc.)
         .replace(/\bor\b/g, '||')
-        // Replace 'and' with '&&'
+        // Replace 'and' with '&&' (word boundary ensures it doesn't match in 'random', 'stand', etc.)
         .replace(/\band\b/g, '&&')
-        // Replace 'not' with '!'
+        // Replace 'not' with '!' (word boundary ensures it doesn't match in 'note', 'notify', etc.)
         .replace(/\bnot\b/g, '!')
         // Replace function with const arrow function
         .replace(/function\s+(\w+)\s*\(/g, 'const $1 = (')
         .replace(/\)\s*{/g, ') => {');
 
-      // Execute the transformed code
+      // Store original code for error mapping
+      const originalCodeLines = code.split('\n');
+      const transformedCodeLines = transformedCode.split('\n');
+
+      // Execute the transformed code with error tracking
       const userCode = new Function(
         'size',
         'background',
@@ -256,8 +268,13 @@ export class CodeInterpreter {
         this.startLoop();
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.context.print(`ERROR: ${errorMessage}`);
+      // Re-throw with more context if possible
+      if (error instanceof Error) {
+        // Try to preserve the original error with stack trace
+        const enhancedError = new Error(error.message);
+        enhancedError.stack = error.stack;
+        throw enhancedError;
+      }
       throw error;
     }
   }
@@ -273,7 +290,8 @@ export class CodeInterpreter {
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        this.context.print(`LOOP ERROR: ${errorMessage}`);
+        const stack = error instanceof Error ? error.stack : '';
+        this.context.print(`LOOP ERROR: ${errorMessage}${stack ? '\n' + stack : ''}`);
         this.stop();
       }
     };

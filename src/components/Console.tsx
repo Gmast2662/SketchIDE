@@ -67,6 +67,9 @@ export const Console: React.FC<ConsoleProps> = ({ messages, onClear }) => {
               <div key={`${msg.id}-${index}`} className="flex items-start gap-2">
                 {getIcon(msg.type)}
                 <div className={`flex-1 ${getTextColor(msg.type)}`}>
+                  {msg.line !== undefined ? (
+                    <span className="font-semibold">Line {msg.line}: </span>
+                  ) : null}
                   {msg.message}
                 </div>
                 <div className="text-xs text-ide-textDim">
