@@ -10,23 +10,39 @@ interface CodeEditorProps {
 }
 
 const highlightSyntax = (code: string) => {
-  const keywords = /\b(var|let|const|if|else|while|for|function|return|and|or|not|true|false)\b/g;
-  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max)\b(?=\()/g;
-  const numbers = /\b\d+(\.\d+)?\b/g;
-  const strings = /(["'])((?:\\.|(?!\1).)*?)\1/g;
-  const comments = /\/\/.*/g;
-
+  // First, escape HTML
   let highlighted = code
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  highlighted = highlighted
-    .replace(comments, '<span class="text-[#6A9955]">$&</span>')
-    .replace(strings, '<span class="text-[#CE9178]">$&</span>')
-    .replace(functions, '<span class="text-[#DCDCAA]">$&</span>')
-    .replace(keywords, '<span class="text-[#569CD6]">$&</span>')
-    .replace(numbers, '<span class="text-[#B5CEA8]">$&</span>');
+  // Process comments first and mark them with placeholders
+  const commentPlaceholders: string[] = [];
+  highlighted = highlighted.replace(/\/\/.*/g, (match) => {
+    const placeholder = `__COMMENT_${commentPlaceholders.length}__`;
+    commentPlaceholders.push(match);
+    return placeholder;
+  });
+
+  // Now process other syntax (only outside comments)
+  const keywords = /\b(var|let|const|if|else|while|for|function|return|and|or|not|true|false)\b/g;
+  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max)\b(?=\()/g;
+  const numbers = /\b\d+(\.\d+)?\b/g;
+  const strings = /(["'])((?:\\.|(?!\1).)*?)\1/g;
+
+  // Process strings first (they can contain slashes that might look like comments)
+  highlighted = highlighted.replace(strings, '<span style="color: #CE9178">$&</span>');
+  
+  // Then process other syntax
+  highlighted = highlighted.replace(functions, '<span style="color: #DCDCAA">$&</span>');
+  highlighted = highlighted.replace(keywords, '<span style="color: #569CD6">$&</span>');
+  highlighted = highlighted.replace(numbers, '<span style="color: #B5CEA8">$&</span>');
+
+  // Finally, replace comment placeholders with styled comments (no highlighting inside)
+  commentPlaceholders.forEach((comment, index) => {
+    const placeholder = `__COMMENT_${index}__`;
+    highlighted = highlighted.replace(placeholder, `<span style="color: #6A9955">${comment}</span>`);
+  });
 
   return highlighted;
 };
