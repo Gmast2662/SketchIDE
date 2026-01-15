@@ -168,26 +168,48 @@ function App() {
         const unexpectedMatch = errorMessage.match(/Unexpected (?:token|identifier) ['"]([^'"]+)['"]/);
         if (unexpectedMatch) {
           const unexpectedChar = unexpectedMatch[1];
-          // Search for this character in the code
-          for (let i = 0; i < codeLines.length; i++) {
-            if (codeLines[i].includes(unexpectedChar)) {
+          // Search for this character in the code, starting from the end (most recent errors)
+          for (let i = codeLines.length - 1; i >= 0; i--) {
+            const line = codeLines[i];
+            // Check if the character appears in this line (not in comments)
+            const commentIndex = line.indexOf('//');
+            const lineToCheck = commentIndex >= 0 ? line.substring(0, commentIndex) : line;
+            if (lineToCheck.includes(unexpectedChar)) {
               return i + 1;
             }
           }
         }
         
-        // Look for lines with unmatched brackets or common syntax issues
-        for (let i = 0; i < codeLines.length; i++) {
-          const line = codeLines[i].trim();
-          // Check for common syntax errors
-          if (line.includes('function') && !line.includes('{') && !line.endsWith(')')) {
-            return i + 1;
-          }
-          if ((line.match(/\(/g) || []).length !== (line.match(/\)/g) || []).length) {
-            return i + 1;
-          }
+        // Look for specific patterns like }g, {x, etc.
+        for (let i = codeLines.length - 1; i >= 0; i--) {
+          const line = codeLines[i];
+          const commentIndex = line.indexOf('//');
+          const lineToCheck = commentIndex >= 0 ? line.substring(0, commentIndex) : line;
+          
           // Check for } followed by a letter (like }g)
-          if (line.match(/\}[a-zA-Z]/)) {
+          if (lineToCheck.match(/\}[a-zA-Z]/)) {
+            return i + 1;
+          }
+          // Check for { followed by unexpected characters
+          if (lineToCheck.match(/\{[^}\s]/) && !lineToCheck.match(/\{[a-zA-Z_]/)) {
+            return i + 1;
+          }
+        }
+        
+        // Look for lines with unmatched brackets or common syntax issues
+        for (let i = codeLines.length - 1; i >= 0; i--) {
+          const line = codeLines[i].trim();
+          const commentIndex = line.indexOf('//');
+          const lineToCheck = commentIndex >= 0 ? line.substring(0, commentIndex) : line;
+          
+          // Check for common syntax errors
+          if (lineToCheck.includes('function') && !lineToCheck.includes('{') && !lineToCheck.endsWith(')')) {
+            return i + 1;
+          }
+          // Check for unmatched parentheses on this line
+          const openParens = (lineToCheck.match(/\(/g) || []).length;
+          const closeParens = (lineToCheck.match(/\)/g) || []).length;
+          if (openParens !== closeParens) {
             return i + 1;
           }
         }

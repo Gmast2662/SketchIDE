@@ -68,7 +68,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'sin(a), cos(a), tan(a)', description: 'Trigonometric functions' },
         { name: 'floor(n), ceil(n), round(n)', description: 'Rounding functions' },
         { name: 'min(a, b), max(a, b)', description: 'Get minimum or maximum value' },
-        { name: 'encrypt(data)', description: 'Encrypt text or numbers using strong encryption' },
+        { name: 'encrypt(data)', description: 'Encrypt text or numbers using strong encryption. Use encrypt(x) to encrypt a variable, or encrypt("text") for strings' },
       ],
     },
     {

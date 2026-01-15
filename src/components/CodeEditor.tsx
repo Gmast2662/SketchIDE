@@ -149,63 +149,81 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
+    let updateTimeout: NodeJS.Timeout | null = null;
+
     const handleSelectionChange = () => {
       if (!textarea) return;
       
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
+      // Clear any pending updates
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
       
-      // Only highlight if cursor is at a single position (not a selection)
-      if (start === end && start >= 0 && start < value.length) {
-        // Check for bracket matching
-        const char = value[start];
-        const bracketPairs: { [key: string]: string } = {
-          '(': ')',
-          '[': ']',
-          '{': '}',
-          ')': '(',
-          ']': '[',
-          '}': '{',
-        };
+      // Delay the update to avoid interfering with typing/deletion
+      updateTimeout = setTimeout(() => {
+        if (!textarea) return;
         
-        if (char && bracketPairs[char]) {
-          const matchPos = findMatchingBracket(value, start, char, bracketPairs[char]);
-          setMatchingBracket(matchPos);
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        
+        // Only highlight if cursor is at a single position (not a selection)
+        if (start === end && start >= 0 && start <= value.length) {
+          // Check for bracket matching - only if cursor is on a bracket
+          if (start < value.length) {
+            const char = value[start];
+            const bracketPairs: { [key: string]: string } = {
+              '(': ')',
+              '[': ']',
+              '{': '}',
+              ')': '(',
+              ']': '[',
+              '}': '{',
+            };
+            
+            if (char && bracketPairs[char]) {
+              const matchPos = findMatchingBracket(value, start, char, bracketPairs[char]);
+              setMatchingBracket(matchPos);
+            } else {
+              setMatchingBracket(null);
+            }
+          } else {
+            setMatchingBracket(null);
+          }
+          
+          // Check for word highlighting
+          if (start > 0 && start <= value.length) {
+            const wordMatch = getWordAtPosition(value, start - 1);
+            if (wordMatch && wordMatch.word.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
+              setSelectedWord(wordMatch.word);
+            } else {
+              setSelectedWord(null);
+            }
+          } else {
+            setSelectedWord(null);
+          }
         } else {
+          // If there's a selection, clear highlights
+          setSelectedWord(null);
           setMatchingBracket(null);
         }
-        
-        // Check for word highlighting
-        const wordMatch = getWordAtPosition(value, start);
-        if (wordMatch && wordMatch.word.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/)) {
-          setSelectedWord(wordMatch.word);
-        } else {
-          setSelectedWord(null);
-        }
-      } else {
-        // If there's a selection, clear highlights
-        setSelectedWord(null);
-        setMatchingBracket(null);
-      }
+      }, 100); // Small delay to avoid interfering with typing
     };
 
     const handleMouseUp = () => {
-      // Small delay to ensure selection is updated
-      setTimeout(handleSelectionChange, 10);
+      handleSelectionChange();
     };
 
+    // Only listen to click and mouseup for selection changes
+    // Don't interfere with input events
     textarea.addEventListener('click', handleSelectionChange);
-    textarea.addEventListener('keyup', handleSelectionChange);
-    textarea.addEventListener('input', handleSelectionChange);
     textarea.addEventListener('mouseup', handleMouseUp);
-    textarea.addEventListener('selectionchange', handleSelectionChange);
 
     return () => {
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
       textarea.removeEventListener('click', handleSelectionChange);
-      textarea.removeEventListener('keyup', handleSelectionChange);
-      textarea.removeEventListener('input', handleSelectionChange);
       textarea.removeEventListener('mouseup', handleMouseUp);
-      textarea.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [value]);
 
@@ -267,8 +285,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    // Don't prevent default for backspace, delete, etc. - let them work normally
+    // Don't prevent default for backspace, delete, arrow keys, etc. - let them work normally
     // Only prevent default for keys we want to customize
+    if (e.key === 'Backspace' || e.key === 'Delete' || e.key.startsWith('Arrow') || 
+        e.key === 'Home' || e.key === 'End' || e.key === 'PageUp' || e.key === 'PageDown') {
+      // Let these keys work normally - don't interfere
+      return;
+    }
 
     // Handle Tab key
     if (e.key === 'Tab') {

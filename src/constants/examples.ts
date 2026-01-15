@@ -585,6 +585,38 @@ function setup() {
   // Objects use names: obj.name
 }`,
   },
+  {
+    id: 'encryption',
+    name: 'Using Encrypt',
+    category: 'Basics',
+    code: `// Encrypt text and numbers with the encrypt() function
+
+function setup() {
+  background(255, 255, 255)
+  
+  // Encrypt a string directly
+  var encrypted1 = encrypt("hello")
+  print("Encrypted 'hello': " + encrypted1)
+  
+  // Encrypt a number
+  var encrypted2 = encrypt(123)
+  print("Encrypted 123: " + encrypted2)
+  
+  // Encrypt a variable
+  var message = "secret message"
+  var encrypted3 = encrypt(message)
+  print("Original: " + message)
+  print("Encrypted: " + encrypted3)
+  
+  // You can encrypt any text or number
+  var password = "mypassword123"
+  var encryptedPassword = encrypt(password)
+  print("Password encrypted: " + encryptedPassword)
+  
+  fill(50, 50, 50)
+  text("Check console for encrypted values", 50, 150, 16)
+}`,
+  },
 ];
 
 export const DEFAULT_CODE = `// Welcome to ProcessingIDE!
