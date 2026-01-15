@@ -6,6 +6,7 @@
   "main": "electron/main.cjs",
   "description": "SketchIDE - A beginner-friendly coding environment",
   "author": "Avi",
+  "copyright": "Copyright © 2026 Avi. All rights reserved.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

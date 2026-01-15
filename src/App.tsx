@@ -117,9 +117,9 @@ function App() {
       }
     };
 
-    // Check on mount, then every 24 hours
+    // Check on mount, then every 1 hour
     checkForUpdates();
-    const interval = setInterval(checkForUpdates, 24 * 60 * 60 * 1000);
+    const interval = setInterval(checkForUpdates, 60 * 60 * 1000); // Check every hour instead of 24 hours
     return () => clearInterval(interval);
   }, [currentVersion]);
 

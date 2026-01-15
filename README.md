@@ -2,6 +2,16 @@
 
 A modern, beginner-friendly coding environment for visual programming, inspired by Processing. Create interactive graphics, animations, and games with a simple, easy-to-learn language.
 
+## 📜 License & Terms
+
+**Copyright © 2026 Avi. All rights reserved.**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Terms of Service:** By using SketchIDE, you agree to the [Terms of Service](TERMS_OF_SERVICE.md).
+
+**Note:** MIT License allows free use, modification, and commercial use. If you prefer a more restrictive license that prevents unauthorized commercial use or redistribution, see [LICENSE_PROPRIETARY.md](LICENSE_PROPRIETARY.md) for an alternative proprietary license option.
+
 ## Features
 
 - **Processing-like Syntax**: Clean, beginner-friendly syntax similar to Processing
@@ -16,7 +26,7 @@ A modern, beginner-friendly coding environment for visual programming, inspired 
 ## Installation
 
 ### Windows
-1. Download `SketchIDE Setup 1.0.0.exe` from the releases
+1. Download `SketchIDE Setup 1.#.#.exe` from the releases
 2. Run the installer
 3. Launch SketchIDE from the Start Menu or desktop shortcut
 
@@ -45,10 +55,14 @@ function loop() {
 
 ### Saving Projects
 
-- **Ctrl+S**: Save the current project (prompts for name if new)
-- **Shift+Ctrl+S**: Save as a new project (always prompts for name)
-- Projects are automatically saved to your sketchbook folder:
-  - Windows: `%APPDATA%\SketchIDE\sketchbook\`
+- **Ctrl+S**: Save the current project
+  - If already saved: Saves to the same file automatically
+  - If new: Opens file dialog to name and save your sketch
+- **Ctrl+Shift+S**: Save As - Always opens file dialog to save with a new name
+- Projects are saved to your sketchbook folder by default:
+  - **Location**: Same folder as the SketchIDE executable
+  - Created automatically on first save
+- Auto-save: Your code is automatically saved every 2 seconds to the same file (if saved)
 
 ## Language Reference
 
@@ -109,6 +123,11 @@ function loop() {
 - `Ctrl+Shift+F` - Format code
 - `Ctrl+Shift+C` - Clear console
 
+
+## 📦 Auto-Update System
+
+SketchIDE automatically checks for updates from GitHub Releases every hour.
+
 ## Examples
 
 Check out the built-in examples from the Help menu to learn:
@@ -122,18 +141,31 @@ Check out the built-in examples from the Help menu to learn:
 
 ## Version
 
-Current version: **1.0.0**
+Current version: **1.0.2**
 
-The app will notify you when updates are available. You can check for updates manually or download the latest version from the releases page.
+The app automatically notifies you when updates are available. Updates are checked from: https://github.com/Gmast2662/SketchIDE/releases
 
-## License
+## 📝 License
 
-Free to use and modify!
+**Copyright © 2026 Avi. All rights reserved.**
 
-## Contributing
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
-Contributions are welcome! Feel free to submit issues or pull requests.
+**Terms of Service:** Please review the [Terms of Service](TERMS_OF_SERVICE.md) before using SketchIDE.
 
-## Support
+**Important:** The MIT License allows:
+- ✅ Free use
+- ✅ Modification
+- ✅ Commercial use (including selling)
+- ✅ Distribution
 
-For help and documentation, use the Help menu in the app or check the built-in examples.
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## 💬 Support
+
+For help and documentation:
+- Use the Help menu in the app
+- Check the built-in examples
+- Visit: https://github.com/Gmast2662/SketchIDE
