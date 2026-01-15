@@ -171,6 +171,35 @@ export class CodeInterpreter {
       const min = Math.min;
       const max = Math.max;
 
+      // Array/List functions - beginner-friendly
+      const createList = (...items: any[]) => {
+        return [...items];
+      };
+
+      const append = (list: any[], item: any) => {
+        list.push(item);
+        return list;
+      };
+
+      const getLength = (list: any[]) => {
+        return list.length;
+      };
+
+      const getItem = (list: any[], index: number) => {
+        if (index < 0 || index >= list.length) {
+          throw new Error(`Index ${index} is out of bounds. List has ${list.length} items.`);
+        }
+        return list[index];
+      };
+
+      const setItem = (list: any[], index: number, value: any) => {
+        if (index < 0 || index >= list.length) {
+          throw new Error(`Index ${index} is out of bounds. List has ${list.length} items.`);
+        }
+        list[index] = value;
+        return list;
+      };
+
       // Transform code syntax
       // Note: <= and >= operators are preserved as-is (word boundaries prevent 'or'/'and' from matching inside them)
       let transformedCode = code
@@ -186,9 +215,21 @@ export class CodeInterpreter {
         .replace(/function\s+(\w+)\s*\(/g, 'const $1 = (')
         .replace(/\)\s*{/g, ') => {');
 
+      // Arrays work naturally with JavaScript [] syntax
+      // Users can use: let list = [] or let list = [1, 2, 3]
+      // And access with: list[0] or use helper functions
+
       // Store original code for error mapping
       const originalCodeLines = code.split('\n');
       const transformedCodeLines = transformedCode.split('\n');
+
+      // Transform array syntax to be beginner-friendly
+      // Replace [] with createList() for empty arrays
+      transformedCode = transformedCode.replace(/=\s*\[\s*\]/g, '= createList()');
+      // Replace [item1, item2, ...] with createList(item1, item2, ...)
+      transformedCode = transformedCode.replace(/=\s*\[([^\]]+)\]/g, (match, items) => {
+        return `= createList(${items})`;
+      });
 
       // Execute the transformed code with error tracking
       const userCode = new Function(
@@ -222,6 +263,11 @@ export class CodeInterpreter {
         'round',
         'min',
         'max',
+        'createList',
+        'append',
+        'getLength',
+        'getItem',
+        'setItem',
         'canvas',
         'Math',
         transformedCode + '\n\nif (typeof setup === "function") setup();\nreturn typeof loop === "function" ? loop : null;'
@@ -259,6 +305,11 @@ export class CodeInterpreter {
         round,
         min,
         max,
+        createList,
+        append,
+        getLength,
+        getItem,
+        setItem,
         canvas,
         Math
       );
