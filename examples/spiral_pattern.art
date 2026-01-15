@@ -1,0 +1,25 @@
+-- Spiral Pattern Example
+-- An animated spiral pattern
+
+function setup()
+    background(240, 240, 240)
+end
+
+function draw()
+    background(240, 240, 240)
+    
+    translate(width / 2, height / 2)
+    
+    for i = 1, 200, 1 do
+        angle = i * 0.1 + frameCount * 0.02
+        radius = i * 2
+        x = cos(angle) * radius
+        y = sin(angle) * radius
+        
+        hue = (i + frameCount) % 360
+        fill(100 + sin(hue * 0.1) * 100, 150 + cos(hue * 0.1) * 100, 255)
+        noStroke()
+        circle(x, y, 10)
+    end
+end
+

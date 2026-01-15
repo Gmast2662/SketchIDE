@@ -1,0 +1,27 @@
+-- Particle System Example
+-- Colorful particles that follow the mouse
+
+function setup()
+    background(20, 20, 30)
+end
+
+function draw()
+    -- Fade effect
+    fill(20, 20, 30, 10)
+    noStroke()
+    rect(0, 0, width, height)
+    
+    -- Draw particles
+    for i = 1, 50, 1 do
+        angle = (i / 50) * TWO_PI + frameCount * 0.01
+        distance = 100 + sin(frameCount * 0.05 + i) * 50
+        x = mouseX + cos(angle) * distance
+        y = mouseY + sin(angle) * distance
+        
+        hue = (i * 7) % 360
+        fill(100 + sin(hue) * 100, 150 + cos(hue) * 100, 255)
+        noStroke()
+        circle(x, y, 5)
+    end
+end
+

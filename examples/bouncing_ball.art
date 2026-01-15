@@ -1,0 +1,38 @@
+-- Bouncing Ball Example
+-- A simple ball that bounces around the screen
+
+x = 400
+y = 300
+speedX = 5
+speedY = 5
+radius = 30
+
+function setup()
+    background(240, 240, 240)
+end
+
+function draw()
+    background(240, 240, 240)
+    
+    -- Update position
+    x = x + speedX
+    y = y + speedY
+    
+    -- Bounce off walls
+    if x - radius < 0 or x + radius > width then
+        speedX = -speedX
+    end
+    if y - radius < 0 or y + radius > height then
+        speedY = -speedY
+    end
+    
+    -- Keep ball in bounds
+    x = constrain(x, radius, width - radius)
+    y = constrain(y, radius, height - radius)
+    
+    -- Draw ball
+    fill(100, 150, 255)
+    noStroke()
+    circle(x, y, radius * 2)
+end
+

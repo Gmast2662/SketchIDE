@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArtLang IDE</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="ide-container">
+        <!-- Top Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-left">
+                <button class="menu-btn" id="newBtn" title="New">New</button>
+                <button class="menu-btn" id="openBtn" title="Open">Open</button>
+                <button class="menu-btn" id="saveBtn" title="Save">Save</button>
+                <button class="menu-btn" id="saveAsBtn" title="Save As">Save As</button>
+                <div class="menu-divider"></div>
+                <button class="menu-btn run-btn" id="runBtn" title="Run (Ctrl+Enter or F5)">▶ Run</button>
+                <button class="menu-btn" id="stopBtn" title="Stop">Stop</button>
+            </div>
+            <div class="menu-right">
+                <button class="menu-btn" id="helpBtn" title="Help">Help</button>
+                <select class="menu-select" id="themeSelect" title="Theme">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="monokai">Monokai</option>
+                    <option value="solarized">Solarized</option>
+                </select>
+                <select class="menu-select" id="fontSizeSelect" title="Font Size">
+                    <option value="12">12px</option>
+                    <option value="14" selected>14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <div class="tabs" id="tabsContainer">
+                <div class="tab active" data-tab="sketch1">
+                    <span class="tab-name">sketch1</span>
+                    <span class="tab-close" data-tab="sketch1">×</span>
+                </div>
+            </div>
+            <button class="tab-add" id="addTabBtn" title="New Tab">+</button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <div class="editor-container">
+                    <div class="editor-wrapper">
+                        <pre class="code-output" id="codeOutput"></pre>
+                        <textarea class="code-editor" id="codeEditor" spellcheck="false"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Panel -->
+            <div class="canvas-panel">
+                <div class="canvas-container">
+                    <canvas id="outputCanvas"></canvas>
+                    <div class="canvas-overlay" id="canvasOverlay">
+                        <div class="canvas-info">Click Run to execute your code</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span class="status-text" id="statusText">Ready</span>
+            <span class="status-separator">|</span>
+            <span class="status-text" id="lineCol">Line 1, Col 1</span>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInputOpen" accept=".art" style="display: none;">
+
+    <!-- Help Modal -->
+    <div class="help-modal" id="helpModal">
+        <div class="help-content">
+            <div class="help-header">
+                <h2>ArtLang Reference</h2>
+                <button class="help-close" id="helpClose">×</button>
+            </div>
+            <div class="help-body" id="helpBody">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="language.js"></script>
+    <script src="graphics.js"></script>
+    <script src="syntax-highlight.js"></script>
+    <script src="ide.js"></script>
+</body>
+</html>
+
