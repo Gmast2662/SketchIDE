@@ -8,6 +8,7 @@ interface Shortcuts {
   'Ctrl+N'?: () => void;
   'Ctrl+Shift+C'?: () => void;
   'Ctrl+O'?: () => void;
+  'Ctrl+Shift+F'?: () => void;
 }
 
 export const useKeyboardShortcuts = (shortcuts: Shortcuts) => {
@@ -30,6 +31,9 @@ export const useKeyboardShortcuts = (shortcuts: Shortcuts) => {
       } else if (isCtrl && e.key === 'o') {
         e.preventDefault();
         shortcuts['Ctrl+O']?.();
+      } else if (isCtrl && e.shiftKey && e.key === 'F') {
+        e.preventDefault();
+        shortcuts['Ctrl+Shift+F']?.();
       }
     };
 

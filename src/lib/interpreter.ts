@@ -34,7 +34,7 @@ export class CodeInterpreter {
     }
   }
 
-  execute(code: string): void {
+  async execute(code: string): Promise<void> {
     this.stop();
     this.stopRequested = false;
 
@@ -283,28 +283,21 @@ export class CodeInterpreter {
       // Accepts seconds (0.1 = 100ms)
       // For very short delays, uses synchronous wait (acceptable blocking)
       // For longer delays, uses setTimeout (non-blocking)
-      const delay = (seconds: number): void | Promise<void> => {
+      // Delay function - always returns a Promise for non-blocking behavior
+      // This allows the UI to remain responsive while code is delayed
+      const delay = (seconds: number): Promise<void> => {
         const milliseconds = seconds * 1000;
         if (milliseconds <= 0) {
-          return;
+          return Promise.resolve();
         }
         
-        // For delays < 50ms, use synchronous wait (acceptable for UI)
-        // For longer delays, use setTimeout (non-blocking)
-        if (milliseconds < 50) {
-          const start = Date.now();
-          while (Date.now() - start < milliseconds) {
-            // Busy wait - blocks but only for very short times
-          }
-          return;
-        } else {
-          // For longer delays, return a promise that will be handled by async code
-          return new Promise((resolve) => {
-            setTimeout(() => {
-              resolve();
-            }, milliseconds);
-          });
-        }
+        // Always use setTimeout for non-blocking delays
+        // This ensures the UI remains responsive
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, milliseconds);
+        });
       };
 
       // Mouse and keyboard state
@@ -730,11 +723,12 @@ export class CodeInterpreter {
           
           return code;
         })() +
-        '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? loop : null;'
+        '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { await setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? (async function loopWrapper() { await loop(); }) : null;'
       );
 
       // Run the code and get loop function if defined
-      this.loopFunction = userCode(
+      // Run the code and get loop function if defined
+      const setupResult = userCode(
         size,
         background,
         fill,
@@ -797,11 +791,21 @@ export class CodeInterpreter {
         Math,
         Promise
       );
+      
+      // Wait for setup to complete if it's async
+      let loopFunc = null;
+      if (setupResult && typeof setupResult.then === 'function') {
+        loopFunc = await setupResult;
+      } else {
+        loopFunc = setupResult;
+      }
+      
+      this.loopFunction = loopFunc;
 
       // Store clearButtons function for use in loop
       (this as any).clearButtons = clearButtons;
       
-      // Function to reset keyClicked state at start of each frame
+      // Function to reset keyClicked state after it's been processed
       const resetKeyClicked = () => {
         keyClicked = false;
         clickedKey = null;
@@ -827,7 +831,7 @@ export class CodeInterpreter {
   private startLoop(): void {
     if (!this.loopFunction || this.stopRequested) return;
 
-    const animate = () => {
+    const animate = async () => {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
@@ -835,7 +839,19 @@ export class CodeInterpreter {
         if ((this as any).clearButtons) {
           (this as any).clearButtons();
         }
-        this.loopFunction();
+        
+        // Execute loop - if it returns a promise (from delay), await it
+        // This makes delay() non-blocking - the UI stays responsive
+        const result = this.loopFunction();
+        if (result && typeof result.then === 'function') {
+          await result;
+        }
+        
+        // Reset keyClicked AFTER loop executes (so it's available during the frame)
+        // This prevents it from being reset before the code can check it
+        if ((this as any).resetKeyClicked) {
+          (this as any).resetKeyClicked();
+        }
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

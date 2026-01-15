@@ -1120,10 +1120,160 @@ function loop() {
   text("A/D to move", 10, 40, 12)
 }`,
   },
+  {
+    id: 'basic-template',
+    name: 'Basic Template',
+    category: 'Templates',
+    code: `// Basic Template
+// Use this as a starting point for any project
+
+function setup() {
+  // Initialize canvas
+  background(255, 255, 255)
+  size(400, 300)
+  
+  // Your initialization code here
+}
+
+function loop() {
+  // This runs continuously
+  // Your animation/game logic here
+}`,
+  },
+  {
+    id: 'website-template',
+    name: 'Website Template',
+    category: 'Templates',
+    code: `// Website Template
+// Create interactive web elements
+
+let pageState = "home"
+
+function setup() {
+  background(240, 240, 240)
+  size(800, 600)
+  
+  // Create navigation buttons
+  button(50, 50, 100, 40, "home")
+  button(160, 50, 100, 40, "about")
+  button(270, 50, 100, 40, "contact")
+}
+
+function loop() {
+  background(240, 240, 240)
+  
+  // Draw navigation
+  fill(50, 50, 50)
+  text("Navigation", 50, 30, 16)
+  
+  // Handle button clicks
+  if (buttonClicked("home")) {
+    pageState = "home"
+    print("Navigated to home")
+  }
+  if (buttonClicked("about")) {
+    pageState = "about"
+    print("Navigated to about")
+  }
+  if (buttonClicked("contact")) {
+    pageState = "contact"
+    print("Navigated to contact")
+  }
+  
+  // Display current page
+  fill(0, 0, 0)
+  text("Current Page: " + pageState, 50, 150, 20)
+  
+  // Page-specific content
+  if (pageState == "home") {
+    fill(100, 150, 255)
+    text("Welcome to the Home Page!", 50, 200, 18)
+  } else if (pageState == "about") {
+    fill(255, 150, 100)
+    text("About Us", 50, 200, 18)
+  } else if (pageState == "contact") {
+    fill(150, 255, 100)
+    text("Contact Information", 50, 200, 18)
+  }
+}`,
+  },
 ];
+
+// Basic template - can be used for any new project
+export const BASIC_TEMPLATE = `// Basic Template
+// Use this as a starting point for any project
+
+function setup() {
+  // Initialize canvas
+  background(255, 255, 255)
+  size(400, 300)
+  
+  // Your initialization code here
+}
+
+function loop() {
+  // This runs continuously
+  // Your animation/game logic here
+}`;
+
+// Website template
+export const WEBSITE_TEMPLATE = `// Website Template
+// Create interactive web elements
+
+let pageState = "home"
+let buttons = []
+
+function setup() {
+  background(240, 240, 240)
+  size(800, 600)
+  
+  // Create navigation buttons
+  button(50, 50, 100, 40, "home")
+  button(160, 50, 100, 40, "about")
+  button(270, 50, 100, 40, "contact")
+}
+
+function loop() {
+  background(240, 240, 240)
+  
+  // Draw navigation
+  fill(50, 50, 50)
+  text("Navigation", 50, 30, 16)
+  
+  // Handle button clicks
+  if (buttonClicked("home")) {
+    pageState = "home"
+    print("Navigated to home")
+  }
+  if (buttonClicked("about")) {
+    pageState = "about"
+    print("Navigated to about")
+  }
+  if (buttonClicked("contact")) {
+    pageState = "contact"
+    print("Navigated to contact")
+  }
+  
+  // Display current page
+  fill(0, 0, 0)
+  text("Current Page: " + pageState, 50, 150, 20)
+  
+  // Page-specific content
+  if (pageState == "home") {
+    fill(100, 150, 255)
+    text("Welcome to the Home Page!", 50, 200, 18)
+  } else if (pageState == "about") {
+    fill(255, 150, 100)
+    text("About Us", 50, 200, 18)
+  } else if (pageState == "contact") {
+    fill(150, 255, 100)
+    text("Contact Information", 50, 200, 18)
+  }
+}`;
 
 export const DEFAULT_CODE = `// Welcome to ProcessingIDE!
 // Write your code here and press Run (Ctrl+R)
+// Press Ctrl+Shift+F to format your code
 
 function setup() {
   background(255, 255, 255)
@@ -1132,7 +1282,5 @@ function setup() {
   ellipse(200, 150, 80, 80)
   
   fill(50, 50, 50)
-  text("Hello, Creative Coder!", 120, 250, 20)
-  
-  print("Ready to create!")
+  text("Hello, World!", 150, 200, 20)
 }`;

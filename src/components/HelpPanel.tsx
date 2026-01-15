@@ -16,8 +16,8 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
           description: 'Set canvas size (use in setup)',
         },
         {
-          name: 'background(r, g, b)',
-          description: 'Fill the canvas with a color',
+          name: 'background(r, g, b, a?)',
+          description: 'Fill the canvas with a color. Optional 4th value (a) is alpha/transparency (0-1). Example: background(255, 0, 0, 0.5) for semi-transparent red',
         },
         { name: 'fill(r, g, b)', description: 'Set fill color for shapes' },
         { name: 'stroke(r, g, b)', description: 'Set outline color' },

@@ -1,6 +1,6 @@
 // Main application component
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { MenuBar } from './components/layout/MenuBar';
 import { Toolbar } from './components/layout/Toolbar';
 import { CodeEditor } from './components/CodeEditor';
@@ -15,6 +15,7 @@ import { CodeInterpreter } from './lib/interpreter';
 import { storage } from './lib/storage';
 import { DEFAULT_CODE } from './constants/examples';
 import type { ConsoleMessage, Project, Example } from './types';
+import { formatCode } from './lib/formatter';
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,7 +58,7 @@ function App() {
   );
 
   // Run code
-  const handleRun = useCallback(() => {
+  const handleRun = useCallback(async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -238,7 +239,7 @@ function App() {
 
     try {
       interpreterRef.current = new CodeInterpreter(context);
-      interpreterRef.current.execute(code);
+      await interpreterRef.current.execute(code);
       setIsRunning(true);
       addConsoleMessage('Execution started', 'success');
     } catch (error) {
@@ -358,6 +359,57 @@ function App() {
     localStorage.setItem('hasSeenWelcome', 'true');
   }, [code]);
 
+  // Format code
+  const handleFormatCode = useCallback(() => {
+    const formatted = formatCode(code);
+    setCode(formatted);
+    addConsoleMessage('Code formatted', 'success');
+  }, [code, addConsoleMessage]);
+
+  // Real-time error detection
+  useEffect(() => {
+    // Debounce error checking
+    const timeoutId = setTimeout(() => {
+      if (!code.trim()) {
+        setErrorLine(null);
+        return;
+      }
+
+      // Quick syntax check - look for common errors
+      const lines = code.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const commentIndex = line.indexOf('//');
+        const lineToCheck = commentIndex >= 0 ? line.substring(0, commentIndex) : line;
+        
+        // Check for unmatched brackets on this line
+        let openCount = 0;
+        let closeCount = 0;
+        for (const char of lineToCheck) {
+          if (char === '(' || char === '{' || char === '[') openCount++;
+          if (char === ')' || char === '}' || char === ']') closeCount++;
+        }
+        
+        // Simple check - if we have more closes than opens, it's likely an error
+        if (closeCount > openCount && lineToCheck.length > 0) {
+          setErrorLine(i + 1);
+          return;
+        }
+        
+        // Check for function without opening brace
+        if (lineToCheck.includes('function') && !lineToCheck.includes('{') && !lineToCheck.endsWith(')')) {
+          setErrorLine(i + 1);
+          return;
+        }
+      }
+      
+      // If no errors found, clear error line
+      setErrorLine(null);
+    }, 500); // Check after 500ms of no typing
+
+    return () => clearTimeout(timeoutId);
+  }, [code]);
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
     'Ctrl+R': handleRun,
@@ -365,6 +417,7 @@ function App() {
     'Ctrl+N': handleNewProject,
     'Ctrl+Shift+C': handleClearConsole,
     'Ctrl+O': handleOpenProject,
+    'Ctrl+Shift+F': handleFormatCode,
   });
 
   return (
