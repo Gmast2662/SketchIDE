@@ -200,7 +200,7 @@ export class CodeInterpreter {
         return list;
       };
 
-      // Encryption function using AES-like encryption with key derivation
+      // Encryption function - reversible encryption
       const encrypt = (data: any): string => {
         // Convert data to string
         const str = String(data);
@@ -209,22 +209,15 @@ export class CodeInterpreter {
         const salt = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const timestamp = Date.now();
         
-        // Create a hash-like value from the data
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          const char = str.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32-bit integer
-        }
+        // Create encryption key from salt and timestamp (not from data, so it's reversible)
+        const key = salt + timestamp.toString(36) + 'SECRET_KEY_2024';
         
-        // Use multiple rounds of transformation
+        // XOR cipher with key rotation (XOR is reversible)
         let encoded = '';
-        const key = hash.toString(36) + salt + timestamp.toString(36);
-        
-        // XOR cipher with key rotation
         for (let i = 0; i < str.length; i++) {
           const charCode = str.charCodeAt(i);
           const keyChar = key.charCodeAt(i % key.length);
+          // XOR with key and position-based scrambling
           const encrypted = charCode ^ keyChar ^ (i * 7 + 13);
           encoded += String.fromCharCode(encrypted);
         }
@@ -244,12 +237,76 @@ export class CodeInterpreter {
           base64 += i + 2 < encoded.length ? alphabet.charAt(bitmap & 63) : '=';
         }
         
-        // Add salt and timestamp to the output (encoded)
+        // Add salt and timestamp to the output (encoded) - needed for decryption
         const saltEncoded = btoa(salt).replace(/[+/=]/g, (m) => ({'+': '-', '/': '_', '=': ''})[m] || '');
         const timeEncoded = timestamp.toString(36);
         
         // Final output: salt + timestamp + encrypted data
         return `ENC:${saltEncoded}:${timeEncoded}:${base64}`;
+      };
+
+      // Delay function - like Lua's task.delay, pauses execution without blocking
+      // Returns a Promise that resolves after the specified milliseconds
+      const delay = (milliseconds: number): Promise<void> => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, milliseconds);
+        });
+      };
+
+      // Decryption function - reverses the encryption
+      const decrypt = (encryptedData: string): string => {
+        // Check if it's a valid encrypted string
+        if (!encryptedData.startsWith('ENC:')) {
+          throw new Error('Invalid encrypted data format. Must start with "ENC:"');
+        }
+        
+        // Parse the encrypted string: ENC:salt:timestamp:data
+        const parts = encryptedData.substring(4).split(':');
+        if (parts.length !== 3) {
+          throw new Error('Invalid encrypted data format');
+        }
+        
+        const [saltEncoded, timeEncoded, base64] = parts;
+        
+        // Decode salt and timestamp
+        const salt = atob(saltEncoded.replace(/-/g, '+').replace(/_/g, '/'));
+        const timestamp = parseInt(timeEncoded, 36);
+        
+        // Recreate the key (same as encryption)
+        const key = salt + timestamp.toString(36) + 'SECRET_KEY_2024';
+        
+        // Decode Base64
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        let encoded = '';
+        for (let i = 0; i < base64.length; i += 4) {
+          const a = alphabet.indexOf(base64[i]);
+          const b = alphabet.indexOf(base64[i + 1]);
+          const c = base64[i + 2] === '=' ? -1 : alphabet.indexOf(base64[i + 2]);
+          const d = base64[i + 3] === '=' ? -1 : alphabet.indexOf(base64[i + 3]);
+          
+          const bitmap = (a << 18) | (b << 12) | (c >= 0 ? c << 6 : 0) | (d >= 0 ? d : 0);
+          
+          encoded += String.fromCharCode((bitmap >> 16) & 255);
+          if (c >= 0) encoded += String.fromCharCode((bitmap >> 8) & 255);
+          if (d >= 0) encoded += String.fromCharCode(bitmap & 255);
+        }
+        
+        // Remove padding nulls
+        encoded = encoded.replace(/\0+$/, '');
+        
+        // Reverse XOR cipher (XOR is its own inverse)
+        let decrypted = '';
+        for (let i = 0; i < encoded.length; i++) {
+          const encrypted = encoded.charCodeAt(i);
+          const keyChar = key.charCodeAt(i % key.length);
+          // Reverse: encrypted ^ keyChar ^ (i * 7 + 13) = original
+          const decryptedChar = encrypted ^ keyChar ^ (i * 7 + 13);
+          decrypted += String.fromCharCode(decryptedChar);
+        }
+        
+        return decrypted;
       };
 
       // Transform code syntax
@@ -286,7 +343,11 @@ export class CodeInterpreter {
         // Replace function with const arrow function - only match function declarations
         .replace(/\bfunction\s+(\w+)\s*\(/g, 'const $1 = (')
         // Replace ) { with ) => { but only for function definitions
-        .replace(/\)\s*\{/g, ') => {');
+        .replace(/\)\s*\{/g, ') => {')
+        // Support async functions
+        .replace(/\basync\s+function\s+(\w+)\s*\(/g, 'const $1 = async (')
+        // Support async arrow functions
+        .replace(/\basync\s+\(/g, 'async (');
       
       // Restore strings
       stringPlaceholders.forEach((str, index) => {
@@ -357,9 +418,12 @@ export class CodeInterpreter {
         'getItem',
         'setItem',
         'encrypt',
+        'decrypt',
+        'delay',
         'canvas',
         'Math',
-        transformedCode + '\n\nif (typeof setup === "function") setup();\nreturn typeof loop === "function" ? loop : null;'
+        'Promise',
+        transformedCode + '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? loop : null;'
       );
 
       // Run the code and get loop function if defined
@@ -400,8 +464,11 @@ export class CodeInterpreter {
         getItem,
         setItem,
         encrypt,
+        decrypt,
+        delay,
         canvas,
-        Math
+        Math,
+        Promise
       );
 
       // Start animation loop if loop() function is defined
@@ -423,11 +490,15 @@ export class CodeInterpreter {
   private startLoop(): void {
     if (!this.loopFunction || this.stopRequested) return;
 
-    const animate = () => {
+    const animate = async () => {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
-        this.loopFunction();
+        const result = this.loopFunction();
+        // Handle async loop functions
+        if (result && typeof result.then === 'function') {
+          await result;
+        }
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

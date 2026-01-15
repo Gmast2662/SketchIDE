@@ -68,7 +68,9 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'sin(a), cos(a), tan(a)', description: 'Trigonometric functions' },
         { name: 'floor(n), ceil(n), round(n)', description: 'Rounding functions' },
         { name: 'min(a, b), max(a, b)', description: 'Get minimum or maximum value' },
-        { name: 'encrypt(data)', description: 'Encrypt text or numbers using strong encryption. Use encrypt(x) to encrypt a variable, or encrypt("text") for strings' },
+        { name: 'encrypt(data)', description: 'Encrypt text or numbers. Use encrypt(x) to encrypt a variable, or encrypt("text") for strings' },
+        { name: 'decrypt(encrypted)', description: 'Decrypt data that was encrypted with encrypt(). Returns the original text or number' },
+        { name: 'await delay(milliseconds)', description: 'Pause execution for specified milliseconds. Use with async functions. Example: await delay(1000) pauses for 1 second' },
       ],
     },
     {
@@ -142,6 +144,56 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Encryption & Decryption */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-ide-text mb-4">
+              Encryption & Decryption
+            </h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  How Decryption Works
+                </h4>
+                <p className="text-sm text-ide-text mb-2">
+                  The encryption function stores the <strong>salt</strong> and <strong>timestamp</strong> in the encrypted output. These are used to recreate the same encryption key during decryption.
+                </p>
+                <p className="text-sm text-ide-text mb-2">
+                  <strong>Why it's reversible:</strong> The key is created from salt + timestamp + a fixed secret (not from the original data), so we can rebuild it from the encrypted string.
+                </p>
+                <p className="text-sm text-ide-text">
+                  <strong>Format:</strong> <code className="text-ide-accent">ENC:salt:timestamp:encrypted_data</code>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Delay Function */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-ide-text mb-4">
+              Delay Function
+            </h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  Using delay() - Like Lua's task.delay
+                </h4>
+                <p className="text-sm text-ide-text mb-2">
+                  The <code className="text-ide-accent">delay()</code> function pauses execution for a specified number of milliseconds without blocking other code.
+                </p>
+                <p className="text-sm text-ide-text mb-2">
+                  <strong>Usage:</strong> Use with <code className="text-ide-accent">async</code> functions and <code className="text-ide-accent">await</code>
+                </p>
+                <p className="text-sm text-ide-text">
+                  <strong>Example:</strong><br />
+                  <code className="text-ide-accent">async function setup() {"{"}</code><br />
+                  <code className="text-ide-accent">  await delay(1000)  // Wait 1 second</code><br />
+                  <code className="text-ide-accent">  print("Done!")</code><br />
+                  <code className="text-ide-accent">{"}"}</code>
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Key Concepts */}

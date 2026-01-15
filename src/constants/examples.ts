@@ -587,34 +587,114 @@ function setup() {
   },
   {
     id: 'encryption',
-    name: 'Using Encrypt',
+    name: 'Using Encrypt & Decrypt',
     category: 'Basics',
-    code: `// Encrypt text and numbers with the encrypt() function
+    code: `// Encrypt and decrypt text and numbers
 
 function setup() {
   background(255, 255, 255)
   
-  // Encrypt a string directly
-  var encrypted1 = encrypt("hello")
-  print("Encrypted 'hello': " + encrypted1)
+  // Encrypt a string
+  var message = "Hello, World!"
+  var encrypted = encrypt(message)
+  print("Original: " + message)
+  print("Encrypted: " + encrypted)
+  
+  // Decrypt it back
+  var decrypted = decrypt(encrypted)
+  print("Decrypted: " + decrypted)
   
   // Encrypt a number
-  var encrypted2 = encrypt(123)
-  print("Encrypted 123: " + encrypted2)
+  var number = 12345
+  var encryptedNum = encrypt(number)
+  print("Original number: " + number)
+  print("Encrypted: " + encryptedNum)
+  print("Decrypted: " + decrypt(encryptedNum))
   
-  // Encrypt a variable
-  var message = "secret message"
-  var encrypted3 = encrypt(message)
-  print("Original: " + message)
-  print("Encrypted: " + encrypted3)
-  
-  // You can encrypt any text or number
-  var password = "mypassword123"
-  var encryptedPassword = encrypt(password)
-  print("Password encrypted: " + encryptedPassword)
+  // Encrypt and decrypt work together!
+  var secret = "My secret password"
+  var safe = encrypt(secret)
+  print("Secret stored as: " + safe)
+  print("When needed, decrypt: " + decrypt(safe))
   
   fill(50, 50, 50)
-  text("Check console for encrypted values", 50, 150, 16)
+  text("Check console for encryption/decryption", 30, 150, 14)
+}`,
+  },
+  {
+    id: 'delay-example',
+    name: 'Using Delay',
+    category: 'Basics',
+    code: `// Use delay() to pause execution without blocking
+
+async function setup() {
+  background(255, 255, 255)
+  
+  print("Starting...")
+  
+  // Delay for 1 second (1000 milliseconds)
+  await delay(1000)
+  print("1 second passed!")
+  
+  fill(255, 0, 0)
+  ellipse(100, 100, 50, 50)
+  print("Drew red circle")
+  
+  // Delay for 500 milliseconds
+  await delay(500)
+  print("0.5 seconds passed!")
+  
+  fill(0, 255, 0)
+  ellipse(200, 100, 50, 50)
+  print("Drew green circle")
+  
+  // Delay for 2 seconds
+  await delay(2000)
+  print("2 seconds passed!")
+  
+  fill(0, 0, 255)
+  ellipse(300, 100, 50, 50)
+  print("Drew blue circle")
+  
+  print("Done!")
+}`,
+  },
+  {
+    id: 'delay-animation',
+    name: 'Delayed Animation',
+    category: 'Animation',
+    code: `// Create animations with delays
+
+var x = 0
+var colorIndex = 0
+var colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0]]
+
+async function setup() {
+  background(20, 20, 30)
+}
+
+async function loop() {
+  // Clear with fade
+  background(20, 20, 30, 0.1)
+  
+  // Draw circle
+  fill(colors[colorIndex][0], colors[colorIndex][1], colors[colorIndex][2])
+  ellipse(x, 150, 30, 30)
+  
+  // Move
+  x = x + 2
+  
+  // Wrap around and change color
+  if (x > 400) {
+    x = 0
+    colorIndex = (colorIndex + 1) % getLength(colors)
+    
+    // Delay when wrapping (pause effect)
+    await delay(200)
+  }
+  
+  // Small delay each frame for slower animation
+  await delay(10)
 }`,
   },
 ];
