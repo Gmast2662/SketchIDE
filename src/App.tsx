@@ -164,6 +164,18 @@ function App() {
       
       // Pattern 6: For syntax errors, try to find lines with common issues
       if (errorMessage.includes('SyntaxError') || errorMessage.includes('Unexpected')) {
+        // Look for "Unexpected identifier" or "Unexpected token" - try to find the problematic character
+        const unexpectedMatch = errorMessage.match(/Unexpected (?:token|identifier) ['"]([^'"]+)['"]/);
+        if (unexpectedMatch) {
+          const unexpectedChar = unexpectedMatch[1];
+          // Search for this character in the code
+          for (let i = 0; i < codeLines.length; i++) {
+            if (codeLines[i].includes(unexpectedChar)) {
+              return i + 1;
+            }
+          }
+        }
+        
         // Look for lines with unmatched brackets or common syntax issues
         for (let i = 0; i < codeLines.length; i++) {
           const line = codeLines[i].trim();
@@ -172,6 +184,10 @@ function App() {
             return i + 1;
           }
           if ((line.match(/\(/g) || []).length !== (line.match(/\)/g) || []).length) {
+            return i + 1;
+          }
+          // Check for } followed by a letter (like }g)
+          if (line.match(/\}[a-zA-Z]/)) {
             return i + 1;
           }
         }

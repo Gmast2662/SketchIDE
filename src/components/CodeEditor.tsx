@@ -15,8 +15,53 @@ const highlightSyntax = (
   matchingBracket: number | null = null,
   cursorPos: number | null = null
 ) => {
-  // First, escape HTML
-  let highlighted = code
+  // Mark word positions in original code first (before HTML escaping)
+  const wordMarkers: { start: number; end: number; marker: string }[] = [];
+  let markedCode = code;
+  
+  if (selectedWord) {
+    const escapedWord = selectedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'g');
+    let match;
+    const markers: { start: number; end: number }[] = [];
+    
+    while ((match = wordRegex.exec(code)) !== null) {
+      const beforeMatch = code.substring(0, match.index);
+      const lastComment = beforeMatch.lastIndexOf('//');
+      const lastNewline = beforeMatch.lastIndexOf('\n');
+      const isInComment = lastComment > lastNewline && lastComment !== -1;
+      
+      // Simple string detection - check if we're inside quotes
+      let inString = false;
+      let quoteChar = '';
+      for (let i = 0; i < match.index; i++) {
+        const char = code[i];
+        if ((char === '"' || char === "'") && (i === 0 || code[i - 1] !== '\\')) {
+          if (!inString) {
+            inString = true;
+            quoteChar = char;
+          } else if (char === quoteChar) {
+            inString = false;
+          }
+        }
+      }
+      
+      if (!isInComment && !inString) {
+        markers.push({ start: match.index, end: match.index + match[0].length });
+      }
+    }
+    
+    // Replace matches with markers in reverse order
+    for (let i = markers.length - 1; i >= 0; i--) {
+      const m = markers[i];
+      const marker = `__WORD_MARKER_${i}__`;
+      wordMarkers.push({ start: m.start, end: m.end, marker });
+      markedCode = markedCode.substring(0, m.start) + marker + markedCode.substring(m.end);
+    }
+  }
+  
+  // Now escape HTML
+  let highlighted = markedCode
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -31,7 +76,7 @@ const highlightSyntax = (
 
   // Now process other syntax (only outside comments)
   const keywords = /\b(var|let|const|if|else|while|for|function|return|and|or|not|true|false)\b/g;
-  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max|createList|append|getLength|getItem|setItem)\b(?=\()/g;
+  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max|createList|append|getLength|getItem|setItem|encrypt)\b(?=\()/g;
   const numbers = /\b\d+(\.\d+)?\b/g;
   const strings = /(["'])((?:\\.|(?!\1).)*?)\1/g;
 
@@ -43,42 +88,18 @@ const highlightSyntax = (
   highlighted = highlighted.replace(keywords, '<span style="color: #569CD6">$&</span>');
   highlighted = highlighted.replace(numbers, '<span style="color: #B5CEA8">$&</span>');
 
-  // Highlight selected word occurrences
-  if (selectedWord) {
-    // Escape special regex characters in the word
-    const escapedWord = selectedWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'g');
-    
-    // Track positions to avoid double-highlighting
-    const positions: number[] = [];
-    let match;
-    const originalHighlighted = highlighted;
-    
-    // Find all matches and their positions
-    while ((match = wordRegex.exec(originalHighlighted)) !== null) {
-      positions.push(match.index);
-    }
-    
-    // Replace matches in reverse order to preserve positions
-    for (let i = positions.length - 1; i >= 0; i--) {
-      const pos = positions[i];
-      const beforeMatch = highlighted.substring(0, pos);
-      const afterMatch = highlighted.substring(pos + selectedWord.length);
-      
-      // Check if we're in a comment or string
-      const lastComment = beforeMatch.lastIndexOf('__COMMENT_');
-      const lastString = beforeMatch.lastIndexOf('<span style="color: #CE9178">');
-      const lastStringEnd = beforeMatch.lastIndexOf('</span>');
-      const isInComment = lastComment > lastString;
-      const isInString = lastString > lastComment && (lastStringEnd < lastString || lastStringEnd === -1);
-      
-      if (!isInComment && !isInString) {
-        const matchText = highlighted.substring(pos, pos + selectedWord.length);
-        const highlightedMatch = `<span style="background-color: rgba(255, 255, 0, 0.3); border-bottom: 1px solid rgba(255, 255, 0, 0.6);">${matchText}</span>`;
-        highlighted = beforeMatch + highlightedMatch + afterMatch;
-      }
-    }
-  }
+  // Replace word markers with highlighted spans
+  wordMarkers.forEach(({ marker, start, end }) => {
+    const markerText = code.substring(start, end);
+    const escapedMarkerText = markerText
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    const highlightedWord = `<span style="background-color: rgba(255, 255, 0, 0.3); border-bottom: 1px solid rgba(255, 255, 0, 0.6);">${escapedMarkerText}</span>`;
+    // Escape the marker for regex replacement
+    const escapedMarker = marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    highlighted = highlighted.replace(new RegExp(escapedMarker, 'g'), highlightedWord);
+  });
 
   // Finally, replace comment placeholders with styled comments (no highlighting inside)
   commentPlaceholders.forEach((comment, index) => {
@@ -96,10 +117,26 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   errorLine = null,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const [lineCount, setLineCount] = useState(1);
   const [highlightedCode, setHighlightedCode] = useState('');
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [matchingBracket, setMatchingBracket] = useState<number | null>(null);
+  
+  // Sync scroll between textarea and overlay
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    const overlay = overlayRef.current;
+    if (!textarea || !overlay) return;
+    
+    const handleScroll = () => {
+      overlay.scrollTop = textarea.scrollTop;
+      overlay.scrollLeft = textarea.scrollLeft;
+    };
+    
+    textarea.addEventListener('scroll', handleScroll);
+    return () => textarea.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const lines = value.split('\n').length;
@@ -230,6 +267,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
+    // Don't prevent default for backspace, delete, etc. - let them work normally
+    // Only prevent default for keys we want to customize
+
     // Handle Tab key
     if (e.key === 'Tab') {
       e.preventDefault();
@@ -300,6 +340,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       <div className="flex-1 relative overflow-hidden">
         {/* Syntax highlighted overlay */}
         <div 
+          ref={overlayRef}
           className="absolute inset-0 px-4 py-4 pointer-events-none overflow-auto whitespace-pre-wrap break-words leading-[1.5]"
           style={{ 
             scrollBehavior: 'auto',

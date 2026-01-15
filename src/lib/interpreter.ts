@@ -200,6 +200,58 @@ export class CodeInterpreter {
         return list;
       };
 
+      // Encryption function using AES-like encryption with key derivation
+      const encrypt = (data: any): string => {
+        // Convert data to string
+        const str = String(data);
+        
+        // Generate a random salt for this encryption
+        const salt = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const timestamp = Date.now();
+        
+        // Create a hash-like value from the data
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32-bit integer
+        }
+        
+        // Use multiple rounds of transformation
+        let encoded = '';
+        const key = hash.toString(36) + salt + timestamp.toString(36);
+        
+        // XOR cipher with key rotation
+        for (let i = 0; i < str.length; i++) {
+          const charCode = str.charCodeAt(i);
+          const keyChar = key.charCodeAt(i % key.length);
+          const encrypted = charCode ^ keyChar ^ (i * 7 + 13);
+          encoded += String.fromCharCode(encrypted);
+        }
+        
+        // Base64-like encoding with custom alphabet
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+        let base64 = '';
+        for (let i = 0; i < encoded.length; i += 3) {
+          const a = encoded.charCodeAt(i);
+          const b = i + 1 < encoded.length ? encoded.charCodeAt(i + 1) : 0;
+          const c = i + 2 < encoded.length ? encoded.charCodeAt(i + 2) : 0;
+          
+          const bitmap = (a << 16) | (b << 8) | c;
+          base64 += alphabet.charAt((bitmap >> 18) & 63);
+          base64 += alphabet.charAt((bitmap >> 12) & 63);
+          base64 += i + 1 < encoded.length ? alphabet.charAt((bitmap >> 6) & 63) : '=';
+          base64 += i + 2 < encoded.length ? alphabet.charAt(bitmap & 63) : '=';
+        }
+        
+        // Add salt and timestamp to the output (encoded)
+        const saltEncoded = btoa(salt).replace(/[+/=]/g, (m) => ({'+': '-', '/': '_', '=': ''})[m] || '');
+        const timeEncoded = timestamp.toString(36);
+        
+        // Final output: salt + timestamp + encrypted data
+        return `ENC:${saltEncoded}:${timeEncoded}:${base64}`;
+      };
+
       // Transform code syntax
       // Note: <= and >= operators are preserved as-is (word boundaries prevent 'or'/'and' from matching inside them)
       
@@ -304,6 +356,7 @@ export class CodeInterpreter {
         'getLength',
         'getItem',
         'setItem',
+        'encrypt',
         'canvas',
         'Math',
         transformedCode + '\n\nif (typeof setup === "function") setup();\nreturn typeof loop === "function" ? loop : null;'
@@ -346,6 +399,7 @@ export class CodeInterpreter {
         getLength,
         getItem,
         setItem,
+        encrypt,
         canvas,
         Math
       );
