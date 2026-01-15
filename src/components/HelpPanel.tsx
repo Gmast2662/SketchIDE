@@ -69,6 +69,19 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'min(a, b), max(a, b)', description: 'Get minimum or maximum value' },
       ],
     },
+    {
+      category: 'Lists (Arrays)',
+      items: [
+        { name: 'let list = []', description: 'Create an empty list' },
+        { name: 'let list = [1, 2, 3]', description: 'Create a list with items' },
+        { name: 'list[0]', description: 'Access item at index (first item is 0)' },
+        { name: 'createList(...items)', description: 'Create a new list with items' },
+        { name: 'append(list, item)', description: 'Add an item to the end of a list' },
+        { name: 'getLength(list)', description: 'Get the number of items in a list' },
+        { name: 'getItem(list, index)', description: 'Get an item at a specific index (with bounds checking)' },
+        { name: 'setItem(list, index, value)', description: 'Set an item at a specific index (with bounds checking)' },
+      ],
+    },
   ];
 
   const shortcuts = [
@@ -127,6 +140,39 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Editor Features */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-ide-text mb-4">
+              Editor Features
+            </h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  Word Highlighting
+                </h4>
+                <p className="text-sm text-ide-text">
+                  Click on any word to highlight all occurrences in your code. This helps you find where variables and functions are used.
+                </p>
+              </div>
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  Bracket Matching
+                </h4>
+                <p className="text-sm text-ide-text">
+                  Click on any bracket ( ), [ ], or { } to see its matching pair highlighted. This helps you find missing or extra brackets.
+                </p>
+              </div>
+              <div className="p-3 bg-ide-toolbar rounded">
+                <h4 className="text-sm font-semibold text-ide-accent mb-2">
+                  Error Highlighting
+                </h4>
+                <p className="text-sm text-ide-text">
+                  When an error occurs, the console shows which line has the error, and that line is highlighted in red in the code editor.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Keyboard Shortcuts */}
