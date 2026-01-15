@@ -68,7 +68,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       <button
         onClick={onSave}
         className="p-2 text-ide-text hover:bg-ide-panel rounded transition-colors"
-        title="Save Project (Ctrl+S)"
+        title="Save Project (Ctrl+S) | Save As (Ctrl+Shift+S)"
       >
         <Save className="w-4 h-4" />
       </button>

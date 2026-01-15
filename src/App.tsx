@@ -11,7 +11,6 @@ import { ProjectsPanel } from './components/ProjectsPanel';
 import { HelpPanel } from './components/HelpPanel';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useAutoSave } from './hooks/useAutoSave';
 import { CodeInterpreter } from './lib/interpreter';
 import { storage } from './lib/storage';
 import { DEFAULT_CODE } from './constants/examples';
@@ -38,10 +37,32 @@ function App() {
     return localStorage.getItem('hasSeenWelcome') === 'true';
   });
   const [latestVersion, setLatestVersion] = useState<string | null>(null);
-  const currentVersion = '1.0.0';
+  // Version is injected at build time from package.json via Vite define
+  // Fallback to import.meta.env.VITE_APP_VERSION if __APP_VERSION__ is not available
+  const currentVersion = (typeof __APP_VERSION__ !== 'undefined' 
+    ? __APP_VERSION__ 
+    : (import.meta.env.VITE_APP_VERSION || '1.0.0')) as string;
+  const [currentFilePath, setCurrentFilePath] = useState<string | null>(null); // Track saved file path
 
-  // Auto-save
-  useAutoSave(code);
+  // Auto-save - saves to localStorage and file (if path exists)
+  useEffect(() => {
+    const autoSaveTimer = setTimeout(() => {
+      if (!code.trim()) return;
+      
+      // Save to localStorage
+      storage.autoSave(code);
+      
+      // Also save to file if we have a saved path (Electron only)
+      const isElectron = typeof window !== 'undefined' && (window as any).electronAPI;
+      if (isElectron && currentFilePath) {
+        (window as any).electronAPI.writeFile(currentFilePath, code).catch(() => {
+          // Silent fail for auto-save
+        });
+      }
+    }, 2000); // Auto-save every 2 seconds
+    
+    return () => clearTimeout(autoSaveTimer);
+  }, [code, currentFilePath]);
 
   // Check for updates (check package.json version vs stored latest version)
   useEffect(() => {
@@ -262,6 +283,8 @@ function App() {
       await interpreterRef.current.execute(code);
       setIsRunning(true);
       addConsoleMessage('Execution started', 'success');
+      // Clear error line when code runs successfully
+      setErrorLine(null);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
@@ -269,8 +292,9 @@ function App() {
       
       if (errorLineNum) {
         setErrorLine(errorLineNum);
-        addConsoleMessage(errorMessage, 'error', errorLineNum);
+        addConsoleMessage(`${errorMessage} (Line ${errorLineNum})`, 'error', errorLineNum);
       } else {
+        // Clear error line if no line number found
         setErrorLine(null);
         addConsoleMessage(errorMessage, 'error');
       }
@@ -307,68 +331,146 @@ function App() {
     }
   }, [handleStop, handleClearConsole]);
 
-  // Save project (Ctrl+S - saves existing or prompts for name if new)
+  // Save project (Ctrl+S - saves existing or shows dialog if new)
   const handleSaveProject = useCallback(async () => {
-    let projectName = currentProject?.name;
+    const isElectron = typeof window !== 'undefined' && (window as any).electronAPI;
     
-    // If no project name exists, prompt for it
-    if (!projectName) {
-      projectName = prompt(
+    // If we have a saved file path, save to that file
+    if (currentFilePath) {
+      if (isElectron) {
+        try {
+          await (window as any).electronAPI.writeFile(currentFilePath, code);
+          const fileName = currentFilePath.split(/[/\\]/).pop() || 'file';
+          addConsoleMessage(`Saved to ${fileName}`, 'success');
+          return;
+        } catch (error) {
+          addConsoleMessage('Error saving file', 'error');
+          return;
+        }
+      }
+    }
+    
+    // Otherwise, show save dialog (or prompt in web)
+    if (isElectron) {
+      try {
+        const sketchbookPath = await (window as any).electronAPI.getSketchbookPath();
+        const defaultName = currentProject?.name || 'Untitled Project';
+        // Use forward slashes for Electron paths (works on Windows too)
+        const defaultPath = `${sketchbookPath}/${defaultName}.art`;
+        
+        const result = await (window as any).electronAPI.showSaveDialog({
+          title: 'Save Sketch',
+          defaultPath: defaultPath,
+        });
+        
+        if (result.canceled || !result.filePath) return;
+        
+        const filePath = result.filePath;
+        await (window as any).electronAPI.writeFile(filePath, code);
+        setCurrentFilePath(filePath);
+        
+        // Update project info - extract filename from path
+        const pathParts = filePath.split(/[/\\]/);
+        const fileName = pathParts[pathParts.length - 1].replace('.art', '');
+        const project: Project = {
+          id: currentProject?.id || Date.now().toString(),
+          name: fileName,
+          code,
+          createdAt: currentProject?.createdAt || Date.now(),
+          updatedAt: Date.now(),
+        };
+        
+        storage.saveProject(project);
+        storage.setCurrentProjectId(project.id);
+        setCurrentProject(project);
+        
+        addConsoleMessage(`Saved to ${fileName}.art`, 'success');
+      } catch (error) {
+        addConsoleMessage('Error saving file', 'error');
+      }
+    } else {
+      // Web version - use prompt
+      let projectName = currentProject?.name;
+      if (!projectName) {
+        projectName = prompt('Enter project name:', 'Untitled Project');
+        if (!projectName) return;
+      }
+      
+      const project: Project = {
+        id: currentProject?.id || Date.now().toString(),
+        name: projectName,
+        code,
+        createdAt: currentProject?.createdAt || Date.now(),
+        updatedAt: Date.now(),
+      };
+      
+      storage.saveProject(project);
+      storage.setCurrentProjectId(project.id);
+      setCurrentProject(project);
+      addConsoleMessage(`Project "${projectName}" saved`, 'success');
+    }
+  }, [code, currentProject, currentFilePath, addConsoleMessage]);
+
+  // Save As project (Shift+Ctrl+S - always shows dialog)
+  const handleSaveAsProject = useCallback(async () => {
+    const isElectron = typeof window !== 'undefined' && (window as any).electronAPI;
+    
+    if (isElectron) {
+      try {
+        const sketchbookPath = await (window as any).electronAPI.getSketchbookPath();
+        const defaultName = currentProject?.name || 'Untitled Project';
+        const defaultPath = `${sketchbookPath}/${defaultName}.art`;
+        
+        const result = await (window as any).electronAPI.showSaveDialog({
+          title: 'Save Sketch As',
+          defaultPath: defaultPath,
+        });
+        
+        if (result.canceled || !result.filePath) return;
+        
+        const filePath = result.filePath;
+        await (window as any).electronAPI.writeFile(filePath, code);
+        setCurrentFilePath(filePath);
+        
+        // Update project info
+        const pathParts = filePath.split(/[/\\]/);
+        const fileName = pathParts[pathParts.length - 1].replace('.art', '');
+        const project: Project = {
+          id: Date.now().toString(), // New ID for save as
+          name: fileName,
+          code,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        
+        storage.saveProject(project);
+        storage.setCurrentProjectId(project.id);
+        setCurrentProject(project);
+        
+        addConsoleMessage(`Saved as ${fileName}.art`, 'success');
+      } catch (error) {
+        addConsoleMessage('Error saving file', 'error');
+      }
+    } else {
+      // Web version - use prompt
+      const projectName = prompt(
         'Enter project name:',
-        'Untitled Project'
+        currentProject?.name || 'Untitled Project'
       );
       if (!projectName) return;
-    }
 
-    const project: Project = {
-      id: currentProject?.id || Date.now().toString(),
-      name: projectName,
-      code,
-      createdAt: currentProject?.createdAt || Date.now(),
-      updatedAt: Date.now(),
-    };
+      const project: Project = {
+        id: Date.now().toString(),
+        name: projectName,
+        code,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
 
-    // Save to both localStorage and sketchbook folder (if Electron)
-    storage.saveProject(project);
-    storage.setCurrentProjectId(project.id);
-    setCurrentProject(project);
-    
-    // Also save to sketchbook folder in Electron
-    const savedToSketchbook = await storage.saveSketch(projectName, code);
-    if (savedToSketchbook) {
-      addConsoleMessage(`Project "${projectName}" saved to sketchbook folder`, 'success');
-    } else {
-      addConsoleMessage(`Project "${projectName}" saved successfully`, 'success');
-    }
-  }, [code, currentProject, addConsoleMessage]);
-
-  // Save As project (Shift+Ctrl+S - always prompts for new name)
-  const handleSaveAsProject = useCallback(async () => {
-    const projectName = prompt(
-      'Enter project name:',
-      currentProject?.name || 'Untitled Project'
-    );
-    if (!projectName) return;
-
-    const project: Project = {
-      id: Date.now().toString(), // New ID for save as
-      name: projectName,
-      code,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    // Save to both localStorage and sketchbook folder (if Electron)
-    storage.saveProject(project);
-    storage.setCurrentProjectId(project.id);
-    setCurrentProject(project);
-    
-    // Also save to sketchbook folder in Electron
-    const savedToSketchbook = await storage.saveSketch(projectName, code);
-    if (savedToSketchbook) {
-      addConsoleMessage(`Project "${projectName}" saved to sketchbook folder`, 'success');
-    } else {
-      addConsoleMessage(`Project "${projectName}" saved successfully`, 'success');
+      storage.saveProject(project);
+      storage.setCurrentProjectId(project.id);
+      setCurrentProject(project);
+      addConsoleMessage(`Project "${projectName}" saved`, 'success');
     }
   }, [code, currentProject, addConsoleMessage]);
 
@@ -406,6 +508,7 @@ function App() {
     (example: Example) => {
       setCode(example.code);
       setCurrentProject(null);
+      setCurrentFilePath(null); // Clear saved file path for examples
       setErrorLine(null);
       handleStop();
       handleClearConsole();
@@ -429,49 +532,9 @@ function App() {
     addConsoleMessage('Code formatted', 'success');
   }, [code, addConsoleMessage]);
 
-  // Real-time error detection
-  useEffect(() => {
-    // Debounce error checking
-    const timeoutId = setTimeout(() => {
-      if (!code.trim()) {
-        setErrorLine(null);
-        return;
-      }
-
-      // Quick syntax check - look for common errors
-      const lines = code.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        const commentIndex = line.indexOf('//');
-        const lineToCheck = commentIndex >= 0 ? line.substring(0, commentIndex) : line;
-        
-        // Check for unmatched brackets on this line
-        let openCount = 0;
-        let closeCount = 0;
-        for (const char of lineToCheck) {
-          if (char === '(' || char === '{' || char === '[') openCount++;
-          if (char === ')' || char === '}' || char === ']') closeCount++;
-        }
-        
-        // Simple check - if we have more closes than opens, it's likely an error
-        if (closeCount > openCount && lineToCheck.length > 0) {
-          setErrorLine(i + 1);
-          return;
-        }
-        
-        // Check for function without opening brace
-        if (lineToCheck.includes('function') && !lineToCheck.includes('{') && !lineToCheck.endsWith(')')) {
-          setErrorLine(i + 1);
-          return;
-        }
-      }
-      
-      // If no errors found, clear error line
-      setErrorLine(null);
-    }, 500); // Check after 500ms of no typing
-
-    return () => clearTimeout(timeoutId);
-  }, [code]);
+  // Real-time error detection - only check on actual runtime errors
+  // Don't do aggressive pre-checking as it causes false positives
+  // Error highlighting is set from console messages with line numbers
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -491,6 +554,7 @@ function App() {
         onNewProject={handleNewProject}
         onOpenProject={handleOpenProject}
         onSaveProject={handleSaveProject}
+        onSaveAsProject={handleSaveAsProject}
         onShowHelp={() => setShowHelp(true)}
         onShowExamples={() => setShowExamples(true)}
       />

@@ -408,6 +408,14 @@ export class CodeInterpreter {
         return keys.every(key => isKeyPressed(key));
       };
       
+      // Check if a key was clicked (one-time key press)
+      const keyClickedFunc = (key?: string): boolean => {
+        if (!keyClicked) return false;
+        if (!key) return keyClicked; // If no key specified, return if any key was clicked
+        // Check if the specified key was clicked
+        return clickedKey !== null && (clickedKey === key || clickedKey.toLowerCase() === key.toLowerCase());
+      };
+      
       // Helper functions for mouse buttons
       const isLeftMouse = (): boolean => mouseButton === 0;
       const isRightMouse = (): boolean => mouseButton === 2;

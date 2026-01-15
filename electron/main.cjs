@@ -1,8 +1,13 @@
 // Electron main process
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs').promises;
 const isDev = process.env.NODE_ENV === 'development';
+
+// Read version from package.json (auto-synced)
+const packageJsonPath = path.join(__dirname, '../package.json');
+const packageJson = JSON.parse(require('fs').readFileSync(packageJsonPath, 'utf-8'));
+const appVersion = packageJson.version;
 
 let mainWindow = null;
 
@@ -163,4 +168,41 @@ ipcMain.handle('file-exists', async (event, filePath) => {
   } catch {
     return false;
   }
+});
+
+// Show save dialog
+ipcMain.handle('show-save-dialog', async (event, options) => {
+  const { BrowserWindow } = require('electron');
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return { canceled: true };
+  
+  const result = await dialog.showSaveDialog(win, {
+    title: options.title || 'Save Sketch',
+    defaultPath: options.defaultPath,
+    filters: [
+      { name: 'Sketch Files', extensions: ['art'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  });
+  
+  return result;
+});
+
+// Show open dialog
+ipcMain.handle('show-open-dialog', async (event, options) => {
+  const { BrowserWindow } = require('electron');
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return { canceled: true };
+  
+  const result = await dialog.showOpenDialog(win, {
+    title: options.title || 'Open Sketch',
+    defaultPath: options.defaultPath,
+    filters: [
+      { name: 'Sketch Files', extensions: ['art'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+    properties: ['openFile'],
+  });
+  
+  return result;
 });

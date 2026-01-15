@@ -7,6 +7,7 @@ interface MenuBarProps {
   onNewProject: () => void;
   onOpenProject: () => void;
   onSaveProject: () => void;
+  onSaveAsProject: () => void;
   onShowHelp: () => void;
   onShowExamples: () => void;
 }
@@ -15,6 +16,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onNewProject,
   onOpenProject,
   onSaveProject,
+  onSaveAsProject,
   onShowHelp,
   onShowExamples,
 }) => {
@@ -29,6 +31,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         { label: 'New', shortcut: 'Ctrl+N', action: onNewProject },
         { label: 'Open', shortcut: 'Ctrl+O', action: onOpenProject },
         { label: 'Save', shortcut: 'Ctrl+S', action: onSaveProject },
+        { label: 'Save As...', shortcut: 'Ctrl+Shift+S', action: onSaveAsProject },
       ],
     },
     {
@@ -110,7 +113,9 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       <div className="flex-1" />
 
       <div className="text-xs text-ide-textDim px-3">
-        v1.0.0
+        v{(typeof __APP_VERSION__ !== 'undefined' 
+          ? __APP_VERSION__ 
+          : (import.meta.env.VITE_APP_VERSION || '1.0.0')) as string}
       </div>
     </div>
   );

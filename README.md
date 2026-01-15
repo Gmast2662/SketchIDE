@@ -102,8 +102,8 @@ function loop() {
 ## Keyboard Shortcuts
 
 - `Ctrl+R` - Run code
-- `Ctrl+S` - Save project
-- `Ctrl+Shift+S` - Save as new project
+- `Ctrl+S` - Save project (same file if already saved, or show dialog)
+- `Ctrl+Shift+S` - Save As (always shows file dialog)
 - `Ctrl+N` - New project
 - `Ctrl+O` - Open project
 - `Ctrl+Shift+F` - Format code

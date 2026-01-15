@@ -1,11 +1,11 @@
 {
   "name": "sketchide",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "SketchIDE - A beginner-friendly coding environment",
-  "author": "Your Name",
+  "author": "Avi",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

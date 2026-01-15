@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     node: process.versions.node,
     chrome: process.versions.chrome,
     electron: process.versions.electron,
+    app: require('electron').app.getVersion(),
   },
   // File system operations
   getAppPath: () => ipcRenderer.invoke('get-app-path'),
@@ -21,4 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readDir: (dirPath) => ipcRenderer.invoke('read-dir', dirPath),
   ensureDir: (dirPath) => ipcRenderer.invoke('ensure-dir', dirPath),
   exists: (filePath) => ipcRenderer.invoke('file-exists', filePath),
+  // File dialogs
+  showSaveDialog: (options) => ipcRenderer.invoke('show-save-dialog', options),
+  showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
 });
