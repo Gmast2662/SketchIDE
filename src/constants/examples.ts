@@ -625,23 +625,23 @@ function setup() {
     id: 'delay-example',
     name: 'Using Delay',
     category: 'Basics',
-    code: `// Use delay() to pause execution without blocking
+    code: `// Use delay() to pause execution - no await needed!
 
-async function setup() {
+function setup() {
   background(255, 255, 255)
   
   print("Starting...")
   
-  // Delay for 1 second (1000 milliseconds)
-  await delay(1000)
+  // Delay for 1 second
+  delay(1)
   print("1 second passed!")
   
   fill(255, 0, 0)
   ellipse(100, 100, 50, 50)
   print("Drew red circle")
   
-  // Delay for 500 milliseconds
-  await delay(500)
+  // Delay for 0.5 seconds (500 milliseconds)
+  delay(0.5)
   print("0.5 seconds passed!")
   
   fill(0, 255, 0)
@@ -649,7 +649,7 @@ async function setup() {
   print("Drew green circle")
   
   // Delay for 2 seconds
-  await delay(2000)
+  delay(2)
   print("2 seconds passed!")
   
   fill(0, 0, 255)
@@ -669,11 +669,11 @@ var x = 0
 var colorIndex = 0
 var colors = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [255, 255, 0]]
 
-async function setup() {
+function setup() {
   background(20, 20, 30)
 }
 
-async function loop() {
+function loop() {
   // Clear with fade
   background(20, 20, 30, 0.1)
   
@@ -689,12 +689,52 @@ async function loop() {
     x = 0
     colorIndex = (colorIndex + 1) % getLength(colors)
     
-    // Delay when wrapping (pause effect)
-    await delay(200)
+    // Delay when wrapping (pause effect) - 0.2 seconds
+    delay(0.2)
   }
   
-  // Small delay each frame for slower animation
-  await delay(10)
+  // Small delay each frame for slower animation - 0.01 seconds
+  delay(0.01)
+}`,
+  },
+  {
+    id: 'mouse-keyboard',
+    name: 'Mouse & Keyboard Input',
+    category: 'Basics',
+    code: `// Detect mouse clicks and key presses
+
+function setup() {
+  background(255, 255, 255)
+  print("Click the canvas or press keys!")
+}
+
+function loop() {
+  // Clear with fade
+  background(255, 255, 255, 0.1)
+  
+  // Draw at mouse position
+  fill(100, 150, 255)
+  ellipse(mouseX, mouseY, 20, 20)
+  
+  // Check if mouse was clicked
+  if (mouseClicked) {
+    fill(255, 100, 100)
+    ellipse(mouseX, mouseY, 40, 40)
+    print("Mouse clicked at: " + mouseX + ", " + mouseY)
+  }
+  
+  // Check if mouse is pressed
+  if (mousePressed) {
+    fill(100, 255, 100)
+    ellipse(mouseX, mouseY, 30, 30)
+  }
+  
+  // Check if key is pressed
+  if (keyPressed) {
+    fill(255, 255, 100)
+    ellipse(mouseX, mouseY, 25, 25)
+    print("Key pressed: " + key)
+  }
 }`,
   },
 ];

@@ -173,12 +173,29 @@ export class CodeInterpreter {
 
       // Array/List functions - beginner-friendly
       const createList = (...items: any[]) => {
+        // Creates a new array/list with the given items
+        // Example: createList(1, 2, 3) returns [1, 2, 3]
         return [...items];
       };
 
-      const append = (list: any[], item: any) => {
-        list.push(item);
-        return list;
+      const append = (target: any[] | any, item: any) => {
+        // Works with arrays: append(list, item) adds item to list
+        // Works with objects: append(obj, {key: value}) adds property to object
+        if (Array.isArray(target)) {
+          target.push(item);
+          return target;
+        } else if (typeof target === 'object' && target !== null) {
+          // For objects, merge the item into the object
+          if (typeof item === 'object' && item !== null) {
+            Object.assign(target, item);
+          } else {
+            // If item is not an object, can't append to object
+            throw new Error('Cannot append non-object to object. Use object syntax: obj.key = value');
+          }
+          return target;
+        } else {
+          throw new Error('append() only works with arrays [] or objects {}');
+        }
       };
 
       const getLength = (list: any[]) => {
@@ -192,12 +209,24 @@ export class CodeInterpreter {
         return list[index];
       };
 
-      const setItem = (list: any[], index: number, value: any) => {
-        if (index < 0 || index >= list.length) {
-          throw new Error(`Index ${index} is out of bounds. List has ${list.length} items.`);
+      const setItem = (target: any[] | any, indexOrKey: number | string, value: any) => {
+        // Works with arrays: setItem(list, index, value) sets list[index] = value
+        // Works with objects: setItem(obj, "key", value) sets obj.key = value
+        if (Array.isArray(target)) {
+          const index = indexOrKey as number;
+          if (index < 0 || index >= target.length) {
+            throw new Error(`Index ${index} is out of bounds. List has ${target.length} items.`);
+          }
+          target[index] = value;
+          return target;
+        } else if (typeof target === 'object' && target !== null) {
+          // For objects, use the key
+          const key = String(indexOrKey);
+          (target as any)[key] = value;
+          return target;
+        } else {
+          throw new Error('setItem() only works with arrays [] or objects {}');
         }
-        list[index] = value;
-        return list;
       };
 
       // Encryption function - reversible encryption
@@ -245,14 +274,18 @@ export class CodeInterpreter {
         return `ENC:${saltEncoded}:${timeEncoded}:${base64}`;
       };
 
-      // Delay function - like Lua's task.delay, pauses execution without blocking
-      // Returns a Promise that resolves after the specified milliseconds
-      const delay = (milliseconds: number): Promise<void> => {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve();
-          }, milliseconds);
-        });
+      // Delay function - like Lua's task.delay, pauses execution
+      // Accepts seconds (0.1 = 100ms), works without await
+      const delay = (seconds: number): void => {
+        const milliseconds = seconds * 1000;
+        if (milliseconds <= 0) return;
+        
+        // For very short delays, use synchronous wait (blocks)
+        // For longer delays, this will still work but may cause browser warnings
+        const start = Date.now();
+        while (Date.now() - start < milliseconds) {
+          // Busy wait - blocks execution
+        }
       };
 
       // Decryption function - reverses the encryption
@@ -380,6 +413,16 @@ export class CodeInterpreter {
       });
       // Note: Objects {} work natively in JavaScript, no transformation needed
 
+      // Create a scope object with mouse/key as properties
+      const scope: any = {
+        mouseX: () => mouseX,
+        mouseY: () => mouseY,
+        mousePressed: () => mousePressed,
+        mouseClicked: () => mouseClicked,
+        keyPressed: () => keyPressed,
+        key: () => currentKey,
+      };
+      
       // Execute the transformed code with error tracking
       const userCode = new Function(
         'size',
@@ -420,10 +463,23 @@ export class CodeInterpreter {
         'encrypt',
         'decrypt',
         'delay',
+        'getMouseX',
+        'getMouseY',
+        'getMousePressed',
+        'getMouseClicked',
+        'getKeyPressed',
+        'getKey',
         'canvas',
         'Math',
         'Promise',
-        transformedCode + '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? loop : null;'
+        // Inject mouse/key as variables in the code
+        transformedCode.replace(/\bmouseX\b/g, 'getMouseX()')
+          .replace(/\bmouseY\b/g, 'getMouseY()')
+          .replace(/\bmousePressed\b/g, 'getMousePressed()')
+          .replace(/\bmouseClicked\b/g, 'getMouseClicked()')
+          .replace(/\bkeyPressed\b/g, 'getKeyPressed()')
+          .replace(/\bkey\b(?!\w)/g, 'getKey()') +
+        '\n\nif (typeof setup === "function") { const setupResult = setup(); if (setupResult && typeof setupResult.then === "function") { setupResult.catch(err => { throw err; }); } }\nreturn typeof loop === "function" ? loop : null;'
       );
 
       // Run the code and get loop function if defined
@@ -466,6 +522,12 @@ export class CodeInterpreter {
         encrypt,
         decrypt,
         delay,
+        () => mouseX,
+        () => mouseY,
+        () => mousePressed,
+        () => mouseClicked,
+        () => keyPressed,
+        () => currentKey,
         canvas,
         Math,
         Promise
@@ -490,15 +552,11 @@ export class CodeInterpreter {
   private startLoop(): void {
     if (!this.loopFunction || this.stopRequested) return;
 
-    const animate = async () => {
+    const animate = () => {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
-        const result = this.loopFunction();
-        // Handle async loop functions
-        if (result && typeof result.then === 'function') {
-          await result;
-        }
+        this.loopFunction();
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
