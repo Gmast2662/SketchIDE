@@ -37,11 +37,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     const fontValue = fontFamily === 'monospace' ? 'monospace' :
       fontFamily === 'sans-serif' ? 'sans-serif' : 'serif';
     document.documentElement.style.setProperty('--editor-font-family', fontValue);
-    // Apply directly to all code editor textareas
-    const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
-    editorTextareas.forEach(textarea => {
-      textarea.style.fontFamily = fontValue;
-    });
+    // Apply directly to all code editor textareas (use setTimeout to ensure DOM is ready)
+    setTimeout(() => {
+      const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
+      editorTextareas.forEach(textarea => {
+        textarea.style.fontFamily = fontValue;
+      });
+    }, 0);
     localStorage.setItem('sketchide-font-family', fontFamily);
   }, [fontFamily]);
 
@@ -54,11 +56,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     };
     const sizeValue = sizeMap[fontSize];
     document.documentElement.style.setProperty('--editor-font-size', sizeValue);
-    // Apply directly to all code editor textareas
-    const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
-    editorTextareas.forEach(textarea => {
-      textarea.style.fontSize = sizeValue;
-    });
+    // Apply directly to all code editor textareas (use setTimeout to ensure DOM is ready)
+    setTimeout(() => {
+      const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
+      editorTextareas.forEach(textarea => {
+        textarea.style.fontSize = sizeValue;
+      });
+    }, 0);
     localStorage.setItem('sketchide-font-size', fontSize);
   }, [fontSize]);
 

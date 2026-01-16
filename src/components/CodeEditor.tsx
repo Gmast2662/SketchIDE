@@ -76,7 +76,7 @@ const highlightSyntax = (
 
   // Now process other syntax (only outside comments)
   const keywords = /\b(var|let|const|if|else|while|for|function|return|and|or|not|true|false)\b/g;
-  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max|createList|append|getLength|getItem|setItem|encrypt|decrypt|delay|mouseX|mouseY|mousePressed|mouseClicked|keyPressed|key|isKeyPressed|isLeftMouse|isRightMouse|keyClicked|button|buttonClicked|clearButtons)\b(?=\()/g;
+  const functions = /\b(setup|loop|size|background|fill|stroke|strokeWeight|ellipse|rect|line|text|print|input|random|triangle|quad|arc|point|map|constrain|dist|abs|sqrt|pow|sin|cos|tan|floor|ceil|round|min|max|createList|append|getLength|getItem|setItem|encrypt|decrypt|delay|mouseX|mouseY|mousePressed|mouseClicked|keyPressed|key|isKeyPressed|isLeftMouse|isRightMouse|keyClicked|keyHeld|button|buttonClicked|clearButtons)\b(?=\()/g;
   const numbers = /\b\d+(\.\d+)?\b/g;
   const strings = /(["'])((?:\\.|(?!\1).)*?)\1/g;
 
@@ -120,6 +120,27 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const overlayRef = useRef<HTMLDivElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const [lineCount, setLineCount] = useState(1);
+
+  // Apply saved settings on mount
+  useEffect(() => {
+    const fontFamily = localStorage.getItem('sketchide-font-family') || 'monospace';
+    const fontSize = localStorage.getItem('sketchide-font-size') || 'medium';
+    
+    const fontValue = fontFamily === 'monospace' ? 'monospace' :
+      fontFamily === 'sans-serif' ? 'sans-serif' : 'serif';
+    const sizeMap = { small: '12px', medium: '14px', large: '16px' };
+    const sizeValue = sizeMap[fontSize as keyof typeof sizeMap] || '14px';
+    
+    // Apply to textarea when it's available
+    if (textareaRef.current) {
+      textareaRef.current.style.fontFamily = fontValue;
+      textareaRef.current.style.fontSize = sizeValue;
+    }
+    
+    // Also set CSS variables
+    document.documentElement.style.setProperty('--editor-font-family', fontValue);
+    document.documentElement.style.setProperty('--editor-font-size', sizeValue);
+  }, []);
   const [highlightedCode, setHighlightedCode] = useState('');
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [matchingBracket, setMatchingBracket] = useState<number | null>(null);

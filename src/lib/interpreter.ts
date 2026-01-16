@@ -416,6 +416,12 @@ export class CodeInterpreter {
         return clickedKey !== null && (clickedKey === key || clickedKey.toLowerCase() === key.toLowerCase());
       };
       
+      // Check if a key is being held down (same as keyPressed but checks specific key)
+      const keyHeld = (key?: string): boolean => {
+        if (!key) return keyPressed; // If no key specified, return if any key is pressed
+        return isKeyPressed(key); // Use existing isKeyPressed function
+      };
+      
       // Helper functions for mouse buttons
       const isLeftMouse = (): boolean => mouseButton === 0;
       const isRightMouse = (): boolean => mouseButton === 2;
@@ -572,10 +578,10 @@ export class CodeInterpreter {
         // Replace function declarations with arrow functions
         // Match: function name(params) { and replace with: const name = (params) => {
         // Handle both empty and non-empty parameter lists
-        // If setup() contains input() calls, make it async automatically
-        .replace(/\bfunction\s+(setup)\s*\(\)\s*\{/g, 'const $1 = async () => {')
+        // Make setup() and loop() async automatically (they may have delay() or input())
+        .replace(/\bfunction\s+(setup|loop)\s*\(\)\s*\{/g, 'const $1 = async () => {')
         .replace(/\bfunction\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = () => {')
-        .replace(/\bfunction\s+(setup)\s*\(([^)]+)\)\s*\{/g, 'const $1 = async ($2) => {')
+        .replace(/\bfunction\s+(setup|loop)\s*\(([^)]+)\)\s*\{/g, 'const $1 = async ($2) => {')
         .replace(/\bfunction\s+(\w+)\s*\(([^)]+)\)\s*\{/g, 'const $1 = ($2) => {')
         // Support async functions
         .replace(/\basync\s+function\s+(\w+)\s*\(\)\s*\{/g, 'const $1 = async () => {')
@@ -683,6 +689,8 @@ export class CodeInterpreter {
         'isLeftMouse',
         'isRightMouse',
         'keyPressedFunc',
+        'keyClickedFunc',
+        'keyHeld',
         'mouseClickedFunc',
         'leftMouse',
         'rightMouse',
@@ -714,6 +722,8 @@ export class CodeInterpreter {
             .replace(/\bkeyPressed\s*\(/g, 'keyPressedFunc(')
             // Replace keyClicked() function calls
             .replace(/\bkeyClicked\s*\(/g, 'keyClickedFunc(')
+            // Replace keyHeld() function calls
+            .replace(/\bkeyHeld\s*\(/g, 'keyHeld(')
             // Replace mouseClicked() function calls (but not the variable)
             .replace(/\bmouseClicked\s*\(/g, 'mouseClickedFunc(')
             // Replace button() calls
@@ -795,6 +805,7 @@ export class CodeInterpreter {
         isRightMouse,
         keyPressedFunc,
         keyClickedFunc,
+        keyHeld,
         mouseClickedFunc,
         leftMouse,
         rightMouse,

@@ -83,6 +83,7 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
         { name: 'isKeyPressed("a" or "A")', description: 'Check if EITHER key is pressed (OR logic). Example: isKeyPressed("a" or "A") checks for lowercase or uppercase' },
         { name: 'keyPressed("key1", "key2", ...)', description: 'Check if ALL of multiple keys are pressed (AND logic). Example: keyPressed("a", "Space") requires both "a" AND "Space" to be pressed' },
         { name: 'keyClicked("key")', description: 'Check if a key was just pressed (one-time event, not held). Use this for actions that should only happen once per key press. Example: keyClicked("p") or keyClicked("p" or "P")' },
+        { name: 'keyHeld("key")', description: 'Check if a specific key is currently being held down. Same as isKeyPressed() but with a clearer name. Example: keyHeld("a") returns true while "a" is held down' },
         { name: 'mouseClicked("left", "right")', description: 'Check if any mouse button was clicked. Use: mouseClicked("left", "right") or mouseClicked(leftMouse, rightMouse)' },
         { name: 'button(x, y, w, h, id)', description: 'Create a button at position (x,y) with size (w,h) and id. Returns button object' },
         { name: 'buttonClicked(id)', description: 'Check if a button with the given id was clicked. Example: if (buttonClicked("myButton")) { }' },
