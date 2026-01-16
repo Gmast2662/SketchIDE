@@ -1,6 +1,6 @@
 // Top menu bar component
 
-import { FileText, Edit, HelpCircle } from 'lucide-react';
+import { FileText, Edit, HelpCircle, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 interface MenuBarProps {
@@ -10,6 +10,8 @@ interface MenuBarProps {
   onSaveAsProject: () => void;
   onShowHelp: () => void;
   onShowExamples: () => void;
+  onShowSettings: () => void;
+  onShowTerms: () => void;
 }
 
 export const MenuBar: React.FC<MenuBarProps> = ({
@@ -19,6 +21,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onSaveAsProject,
   onShowHelp,
   onShowExamples,
+  onShowSettings,
+  onShowTerms,
 }) => {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
@@ -51,6 +55,15 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       items: [
         { label: 'Documentation', shortcut: '', action: onShowHelp },
         { label: 'Examples', shortcut: '', action: onShowExamples },
+        { label: 'Terms & License', shortcut: '', action: onShowTerms },
+      ],
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      icon: Settings,
+      items: [
+        { label: 'Preferences', shortcut: '', action: onShowSettings },
       ],
     },
   ];

@@ -9,6 +9,7 @@ import { Console } from './components/Console';
 import { ExamplesPanel } from './components/ExamplesPanel';
 import { ProjectsPanel } from './components/ProjectsPanel';
 import { HelpPanel } from './components/HelpPanel';
+import { SettingsPanel } from './components/SettingsPanel';
 import { UpdateNotification } from './components/UpdateNotification';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { CodeInterpreter } from './lib/interpreter';
@@ -31,6 +32,8 @@ function App() {
   const [showExamples, setShowExamples] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [errorLine, setErrorLine] = useState<number | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
   const [hasSeenWelcome, setHasSeenWelcome] = useState(() => {
@@ -371,10 +374,23 @@ function App() {
     if (confirm('Start a new project? Any unsaved changes will be lost.')) {
       setCode(DEFAULT_CODE);
       setCurrentProject(null);
+      setCurrentFilePath(null);
       setErrorLine(null);
       handleStop();
       handleClearConsole();
       storage.clearAutoSave();
+      // Reset canvas
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          canvas.width = 400;
+          canvas.height = 300;
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, 400, 300);
+          setCanvasSize({ width: 400, height: 300 });
+        }
+      }
     }
   }, [handleStop, handleClearConsole]);
 
@@ -422,16 +438,19 @@ function App() {
           return;
         }
         
+        // Processing-like structure: folderName/folderName.art
         const filePath = result.filePath;
+        const folderPath = result.folderPath || filePath.substring(0, filePath.lastIndexOf('/') || filePath.lastIndexOf('\\'));
+        
         await (window as any).electronAPI.writeFile(filePath, code);
         setCurrentFilePath(filePath);
         
-        // Update project info - extract filename from path
-        const pathParts = filePath.split(/[/\\]/);
-        const fileName = pathParts[pathParts.length - 1].replace('.art', '');
+        // Update project info - extract folder name from path
+        const pathParts = folderPath ? folderPath.split(/[/\\]/) : filePath.split(/[/\\]/);
+        const folderName = pathParts[pathParts.length - 1];
         const project: Project = {
           id: currentProject?.id || Date.now().toString(),
-          name: fileName,
+          name: folderName,
           code,
           createdAt: currentProject?.createdAt || Date.now(),
           updatedAt: Date.now(),
@@ -441,7 +460,7 @@ function App() {
         storage.setCurrentProjectId(project.id);
         setCurrentProject(project);
         
-        addConsoleMessage(`Saved to ${fileName}.art`, 'success');
+        addConsoleMessage(`Saved to ${folderName}/`, 'success');
       } catch (error) {
         addConsoleMessage('Error saving file', 'error');
       }
@@ -485,16 +504,19 @@ function App() {
         
         if (result.canceled || !result.filePath) return;
         
+        // Processing-like structure: folderName/folderName.art
         const filePath = result.filePath;
+        const folderPath = result.folderPath || filePath.substring(0, filePath.lastIndexOf('/') || filePath.lastIndexOf('\\'));
+        
         await (window as any).electronAPI.writeFile(filePath, code);
         setCurrentFilePath(filePath);
         
-        // Update project info
-        const pathParts = filePath.split(/[/\\]/);
-        const fileName = pathParts[pathParts.length - 1].replace('.art', '');
+        // Update project info - extract folder name from path
+        const pathParts = folderPath ? folderPath.split(/[/\\]/) : filePath.split(/[/\\]/);
+        const folderName = pathParts[pathParts.length - 1];
         const project: Project = {
           id: Date.now().toString(), // New ID for save as
-          name: fileName,
+          name: folderName,
           code,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -504,7 +526,7 @@ function App() {
         storage.setCurrentProjectId(project.id);
         setCurrentProject(project);
         
-        addConsoleMessage(`Saved as ${fileName}.art`, 'success');
+        addConsoleMessage(`Saved as ${folderName}/`, 'success');
       } catch (error) {
         addConsoleMessage('Error saving file', 'error');
       }
@@ -541,9 +563,22 @@ function App() {
     (project: Project) => {
       setCode(project.code);
       setCurrentProject(project);
+      setCurrentFilePath(null);
       storage.setCurrentProjectId(project.id);
       handleStop();
       handleClearConsole();
+      // Reset canvas
+      if (canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          canvas.width = 400;
+          canvas.height = 300;
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, 400, 300);
+          setCanvasSize({ width: 400, height: 300 });
+        }
+      }
       addConsoleMessage(`Opened project "${project.name}"`, 'success');
     },
     [handleStop, handleClearConsole, addConsoleMessage]
@@ -614,6 +649,8 @@ function App() {
         onSaveAsProject={handleSaveAsProject}
         onShowHelp={() => setShowHelp(true)}
         onShowExamples={() => setShowExamples(true)}
+        onShowSettings={() => setShowSettings(true)}
+        onShowTerms={() => setShowTerms(true)}
       />
 
       {/* Toolbar */}
@@ -724,6 +761,8 @@ function App() {
       )}
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      {showTerms && <TermsPanel onClose={() => setShowTerms(false)} />}
 
       {/* Update Notification */}
       {showUpdateNotification && latestVersion && (

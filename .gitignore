@@ -26,3 +26,32 @@ out
 *.njsproj
 *.sln
 *.sw?
+
+# Build artifacts
+build/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.blockmap
+
+# OS files
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.cache
+
+# Lock files (keep package-lock.json, ignore others)
+bun.lock
+yarn.lock
+pnpm-lock.yaml
+
+# Documentation (optional - keep in repo but can ignore if needed)
+# GITHUB_RELEASES.md

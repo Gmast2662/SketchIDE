@@ -1,7 +1,7 @@
 {
   "name": "SketchIDE",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "SketchIDE - A beginner-friendly coding environment",
@@ -18,7 +18,6 @@
     "electron:build": "npm run build && electron-builder",
     "electron:build:win": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win",
     "electron:build:portable": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win --config.win.target=dir --config.win.sign=null",
-    "electron:install": "powershell -ExecutionPolicy Bypass -File create-installer.ps1",
     "electron:build:mac": "npm run build && electron-builder --mac",
     "electron:build:linux": "npm run build && electron-builder --linux"
   },

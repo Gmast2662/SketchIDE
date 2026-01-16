@@ -186,30 +186,63 @@ ipcMain.handle('file-exists', async (event, filePath) => {
   }
 });
 
-// Show save dialog
+// Show save dialog (for Processing-like folder structure)
 ipcMain.handle('show-save-dialog', async (event, options) => {
   const { BrowserWindow } = require('electron');
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return { canceled: true };
   
-  const result = await dialog.showSaveDialog(win, {
+  // For Processing-like saves, we need to select/create a folder
+  // First show a dialog to get the folder name
+  const folderResult = await dialog.showSaveDialog(win, {
     title: options.title || 'Save Sketch',
     defaultPath: options.defaultPath,
     filters: [
-      { name: 'Sketch Files', extensions: ['art'] },
+      { name: 'Sketch Folders', extensions: [''] }, // No extension for folders
       { name: 'All Files', extensions: ['*'] },
     ],
+    buttonLabel: 'Select Folder',
   });
   
-  return result;
+  if (folderResult.canceled || !folderResult.filePath) {
+    return { canceled: true };
+  }
+  
+  // Extract folder path and name
+  let folderPath = folderResult.filePath;
+  // Remove extension if user added one
+  if (folderPath.endsWith('.art')) {
+    folderPath = folderPath.replace(/\.art$/, '');
+  }
+  
+  // Create folder structure: folderName/folderName.art and folderName/data/
+  const folderName = path.basename(folderPath);
+  const sketchFilePath = path.join(folderPath, `${folderName}.art`);
+  const dataFolderPath = path.join(folderPath, 'data');
+  
+  // Ensure folders exist
+  try {
+    await fs.mkdir(folderPath, { recursive: true });
+    await fs.mkdir(dataFolderPath, { recursive: true });
+  } catch (error) {
+    console.error('Error creating sketch folder structure:', error);
+    return { canceled: true, error: error.message };
+  }
+  
+  return {
+    canceled: false,
+    filePath: sketchFilePath, // Return path to .art file
+    folderPath: folderPath, // Also return folder path
+  };
 });
 
-// Show open dialog
+// Show open dialog (for Processing-like folder structure)
 ipcMain.handle('show-open-dialog', async (event, options) => {
   const { BrowserWindow } = require('electron');
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return { canceled: true };
   
+  // For Processing-like structure, open the .art file inside the folder
   const result = await dialog.showOpenDialog(win, {
     title: options.title || 'Open Sketch',
     defaultPath: options.defaultPath,
@@ -220,5 +253,14 @@ ipcMain.handle('show-open-dialog', async (event, options) => {
     properties: ['openFile'],
   });
   
-  return result;
+  if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+  
+  // Return the file path (should be folderName/folderName.art)
+  return {
+    canceled: false,
+    filePath: result.filePaths[0],
+    folderPath: path.dirname(result.filePaths[0]), // Also return folder path
+  };
 });

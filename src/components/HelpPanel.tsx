@@ -1,6 +1,6 @@
 // Help documentation panel
 
-import { X, BookOpen } from 'lucide-react';
+import { X, BookOpen, Github } from 'lucide-react';
 
 interface HelpPanelProps {
   onClose: () => void;
@@ -126,12 +126,23 @@ export const HelpPanel: React.FC<HelpPanelProps> = ({ onClose }) => {
               Documentation
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-ide-toolbar rounded transition-colors"
-          >
-            <X className="w-5 h-5 text-ide-text" />
-          </button>
+          <div className="flex items-center gap-2">
+            <a
+              href="https://github.com/Gmast2662/SketchIDE"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 bg-ide-toolbar hover:bg-ide-panel rounded transition-colors text-sm text-ide-text"
+            >
+              <Github className="w-4 h-4" />
+              <span>GitHub</span>
+            </a>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-ide-toolbar rounded transition-colors"
+            >
+              <X className="w-5 h-5 text-ide-text" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}

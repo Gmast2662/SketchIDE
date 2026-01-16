@@ -14,18 +14,20 @@ The Software and its associated documentation are the exclusive property of Avi 
 
 ## 3. License Grant
 
-Subject to your compliance with these Terms, you are granted a limited, non-exclusive, non-transferable license to:
-- Download and install the Software for personal or internal business use
-- Use the Software in accordance with its intended purpose
+This Software is licensed under the GNU General Public License v3.0 (GPL-3.0). Subject to your compliance with these Terms and the GPL-3.0 license, you are granted the following rights:
+- Download, install, and use the Software for any purpose
+- Modify the source code as needed
+- Distribute the Software and your modifications
+- Access to the full source code
+
+**Important:** Any modifications or derivative works must also be licensed under GPL-3.0 (open source).
 
 ## 4. Restrictions
 
 You may NOT:
-- Copy, modify, adapt, translate, or create derivative works of the Software
-- Reverse engineer, decompile, disassemble, or attempt to derive the source code
-- Remove, alter, or obscure any proprietary notices, labels, or marks
-- Rent, lease, lend, sell, sublicense, or commercially distribute the Software
+- Remove, alter, or obscure any copyright notices or license information
 - Use the Software for any illegal or unauthorized purpose
+- Distribute modified versions without also making the source code available under GPL-3.0
 
 ## 5. Intellectual Property
 

@@ -846,7 +846,7 @@ export class CodeInterpreter {
   private startLoop(): void {
     if (!this.loopFunction || this.stopRequested) return;
 
-    const animate = async () => {
+      const animate = async () => {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
@@ -857,8 +857,12 @@ export class CodeInterpreter {
         
         // Execute loop - if it returns a promise (from delay), await it
         // This makes delay() non-blocking - the UI stays responsive
+        // The delay() function uses setTimeout, so it doesn't block the main thread
+        // requestAnimationFrame continues to run, keeping the UI responsive
         const result = this.loopFunction();
         if (result && typeof result.then === 'function') {
+          // If loop is async and returns a promise, await it
+          // But don't wait for delay() - it's already non-blocking via setTimeout
           await result;
         }
         
@@ -867,6 +871,10 @@ export class CodeInterpreter {
         if ((this as any).resetKeyClicked) {
           (this as any).resetKeyClicked();
         }
+        
+        // Schedule next frame - this keeps the animation loop running
+        // Even if delay() is called, requestAnimationFrame continues
+        // The delay() uses setTimeout which doesn't block the event loop
         this.animationId = requestAnimationFrame(animate);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
