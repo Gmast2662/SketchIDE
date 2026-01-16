@@ -37,13 +37,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     const fontValue = fontFamily === 'monospace' ? 'monospace' :
       fontFamily === 'sans-serif' ? 'sans-serif' : 'serif';
     document.documentElement.style.setProperty('--editor-font-family', fontValue);
-    // Apply directly to all code editor textareas (use setTimeout to ensure DOM is ready)
-    setTimeout(() => {
+    // Apply directly to all code editor textareas and overlays
+    const applyFont = () => {
       const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
+      const editorOverlays = document.querySelectorAll('[class*="absolute inset-0"]') as NodeListOf<HTMLElement>;
       editorTextareas.forEach(textarea => {
         textarea.style.fontFamily = fontValue;
       });
-    }, 0);
+      editorOverlays.forEach(overlay => {
+        overlay.style.fontFamily = fontValue;
+      });
+    };
+    // Try immediately and also with a small delay
+    applyFont();
+    setTimeout(applyFont, 0);
+    setTimeout(applyFont, 100);
     localStorage.setItem('sketchide-font-family', fontFamily);
   }, [fontFamily]);
 
@@ -56,13 +64,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     };
     const sizeValue = sizeMap[fontSize];
     document.documentElement.style.setProperty('--editor-font-size', sizeValue);
-    // Apply directly to all code editor textareas (use setTimeout to ensure DOM is ready)
-    setTimeout(() => {
+    // Apply directly to all code editor textareas and overlays
+    const applySize = () => {
       const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
+      const editorOverlays = document.querySelectorAll('[class*="absolute inset-0"]') as NodeListOf<HTMLElement>;
       editorTextareas.forEach(textarea => {
         textarea.style.fontSize = sizeValue;
       });
-    }, 0);
+      editorOverlays.forEach(overlay => {
+        overlay.style.fontSize = sizeValue;
+      });
+    };
+    // Try immediately and also with a small delay
+    applySize();
+    setTimeout(applySize, 0);
+    setTimeout(applySize, 100);
     localStorage.setItem('sketchide-font-size', fontSize);
   }, [fontSize]);
 

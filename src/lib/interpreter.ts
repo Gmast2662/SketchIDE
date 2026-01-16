@@ -77,6 +77,7 @@ export class CodeInterpreter {
 
       const fill = (r: number, g: number = r, b: number = r, a: number = 1) => {
         currentFillColor = `rgba(${r}, ${g}, ${b}, ${a})`;
+        ctx.fillStyle = currentFillColor; // Also update context immediately
       };
 
       const stroke = (r: number, g: number = r, b: number = r) => {
@@ -310,7 +311,8 @@ export class CodeInterpreter {
       let currentKey = '';
       let pressedKeys = new Set<string>(); // Track all pressed keys
       let keyClicked = false; // True for one frame after key press
-      let clickedKey: string | null = null; // The key that was just clicked
+      let clickedKeys = new Set<string>(); // Track all keys that were just clicked (supports multiple keys)
+      let clickedKey: string | null = null; // The most recently clicked key
       
       // Set up mouse and keyboard event listeners
       const handleMouseMove = (e: MouseEvent) => {
@@ -336,8 +338,12 @@ export class CodeInterpreter {
         // Don't capture IDE shortcuts
         if (e.ctrlKey || e.metaKey) return;
         
-        // Only set keyClicked if this key wasn't already pressed
-        if (!pressedKeys.has(e.key)) {
+        // Track if this is a new key press (not already held)
+        const isNewPress = !pressedKeys.has(e.key);
+        
+        if (isNewPress) {
+          // Add to clicked keys set (for multi-key detection)
+          clickedKeys.add(e.key);
           keyClicked = true;
           clickedKey = e.key;
         }
@@ -412,8 +418,15 @@ export class CodeInterpreter {
       const keyClickedFunc = (key?: string): boolean => {
         if (!keyClicked) return false;
         if (!key) return keyClicked; // If no key specified, return if any key was clicked
-        // Check if the specified key was clicked
-        return clickedKey !== null && (clickedKey === key || clickedKey.toLowerCase() === key.toLowerCase());
+        // Check if the specified key is in the clickedKeys set (supports multiple keys)
+        const normalizedKey = key.trim();
+        for (const clicked of clickedKeys) {
+          if (clicked === normalizedKey || clicked.toLowerCase() === normalizedKey.toLowerCase()) {
+            return true;
+          }
+        }
+        // Also check clickedKey for backward compatibility
+        return clickedKey !== null && (clickedKey === normalizedKey || clickedKey.toLowerCase() === normalizedKey.toLowerCase());
       };
       
       // Check if a key is being held down (same as keyPressed but checks specific key)
@@ -468,11 +481,27 @@ export class CodeInterpreter {
         
         buttons.set(id, btn);
         
-        // Draw the button
-        fill(200, 200, 200);
-        rect(x, y, w, h);
-        fill(0, 0, 0);
-        text(id, x + 10, y + h/2 + 5, 14);
+        // Draw the button - use current fill color (set by fill() before button call)
+        // Save current fill color
+        const savedFillColor = currentFillColor;
+        // Get the actual fill style from context (fill() sets currentFillColor, but we need ctx.fillStyle)
+        const savedFillStyle = ctx.fillStyle;
+        // If fill was set to black (default), use a light gray for button background
+        // Otherwise, use the current fill color from context
+        if (currentFillColor === 'black' || currentFillColor === 'rgba(0, 0, 0, 1)') {
+          ctx.fillStyle = 'rgba(200, 200, 200, 1)'; // Default button color
+        } else {
+          ctx.fillStyle = currentFillColor; // Use the fill color set by fill()
+        }
+        ctx.fillRect(x, y, w, h);
+        // Draw text in black
+        ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+        ctx.font = '14px monospace';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(id, x + 10, y + h/2);
+        // Restore original fill color for subsequent drawing
+        ctx.fillStyle = savedFillStyle;
+        currentFillColor = savedFillColor;
         
         return btn;
       };
@@ -834,6 +863,7 @@ export class CodeInterpreter {
       // Function to reset keyClicked state after it's been processed
       const resetKeyClicked = () => {
         keyClicked = false;
+        clickedKeys.clear(); // Clear all clicked keys
         clickedKey = null;
       };
       (this as any).resetKeyClicked = resetKeyClicked;

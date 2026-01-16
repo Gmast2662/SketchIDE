@@ -396,7 +396,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           className="absolute inset-0 px-4 py-4 pointer-events-none overflow-auto whitespace-pre-wrap break-words leading-[1.5]"
           style={{ 
             scrollBehavior: 'auto',
-            overflowX: 'hidden'
+            overflowX: 'hidden',
+            fontFamily: 'var(--editor-font-family, monospace)',
+            fontSize: 'var(--editor-font-size, 14px)',
+            font: 'var(--editor-font-family, monospace) var(--editor-font-size, 14px)',
+            letterSpacing: '0px',
+            wordSpacing: '0px'
           }}
         >
           {value.split('\n').map((line, i) => {
@@ -481,11 +486,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
-          className="code-editor-textarea w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none leading-[1.5] overflow-auto relative z-10"
+          className="code-editor-textarea w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none leading-[1.5] overflow-auto relative z-10 whitespace-pre-wrap break-words"
           style={{ 
             caretColor: '#CCCCCC',
             fontFamily: 'var(--editor-font-family, monospace)',
-            fontSize: 'var(--editor-font-size, 14px)'
+            fontSize: 'var(--editor-font-size, 14px)',
+            font: 'var(--editor-font-family, monospace) var(--editor-font-size, 14px)',
+            letterSpacing: '0px',
+            wordSpacing: '0px'
           }}
           spellCheck={false}
           autoComplete="off"
