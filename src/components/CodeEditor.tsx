@@ -380,7 +380,13 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           return (
             <div
               key={lineNum}
-              className={`leading-[1.5] h-[21px] ${isError ? 'text-ide-error font-bold' : ''}`}
+              className={`${isError ? 'text-ide-error font-bold' : ''}`}
+              style={{
+                lineHeight: '1.5',
+                height: '1.5em',
+                fontFamily: 'var(--editor-font-family, monospace)',
+                fontSize: 'var(--editor-font-size, 14px)'
+              }}
             >
               {lineNum}
             </div>
@@ -393,15 +399,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         {/* Syntax highlighted overlay */}
         <div 
           ref={overlayRef}
-          className="absolute inset-0 px-4 py-4 pointer-events-none overflow-auto whitespace-pre-wrap break-words leading-[1.5]"
+          className="absolute inset-0 px-4 py-4 pointer-events-none overflow-auto whitespace-pre-wrap break-words"
           style={{ 
             scrollBehavior: 'auto',
             overflowX: 'hidden',
             fontFamily: 'var(--editor-font-family, monospace)',
             fontSize: 'var(--editor-font-size, 14px)',
-            font: 'var(--editor-font-family, monospace) var(--editor-font-size, 14px)',
+            lineHeight: '1.5',
             letterSpacing: '0px',
-            wordSpacing: '0px'
+            wordSpacing: '0px',
+            tabSize: '4',
+            MozTabSize: '4'
           }}
         >
           {value.split('\n').map((line, i) => {
@@ -470,7 +478,20 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             return (
               <div
                 key={i}
-                className={`h-[21px] ${isError ? 'bg-red-900/30' : ''}`}
+                className={`${isError ? 'bg-red-900/30' : ''}`}
+                style={{
+                  height: '1.5em',
+                  lineHeight: '1.5',
+                  fontFamily: 'var(--editor-font-family, monospace)',
+                  fontSize: 'var(--editor-font-size, 14px)',
+                  letterSpacing: '0px',
+                  wordSpacing: '0px',
+                  margin: '0',
+                  padding: '0',
+                  display: 'block',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}
                 dangerouslySetInnerHTML={{ 
                   __html: lineHighlighted || '&nbsp;' 
                 }}
@@ -486,14 +507,16 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
-          className="code-editor-textarea w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none leading-[1.5] overflow-auto relative z-10 whitespace-pre-wrap break-words"
+          className="code-editor-textarea w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none overflow-auto relative z-10 whitespace-pre-wrap break-words"
           style={{ 
             caretColor: '#CCCCCC',
             fontFamily: 'var(--editor-font-family, monospace)',
             fontSize: 'var(--editor-font-size, 14px)',
-            font: 'var(--editor-font-family, monospace) var(--editor-font-size, 14px)',
+            lineHeight: '1.5',
             letterSpacing: '0px',
-            wordSpacing: '0px'
+            wordSpacing: '0px',
+            tabSize: '4',
+            MozTabSize: '4'
           }}
           spellCheck={false}
           autoComplete="off"
