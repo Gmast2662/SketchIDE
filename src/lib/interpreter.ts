@@ -421,11 +421,18 @@ export class CodeInterpreter {
       };
       
       // Check if a key was clicked (one-time key press)
-      const keyClickedFunc = (key?: string): boolean => {
+      // Supports multiple keys: keyClicked("a") || keyClicked("b")
+      const keyClickedFunc = (key?: string | string[]): boolean => {
         if (!keyClicked) return false;
         if (!key) return keyClicked; // If no key specified, return if any key was clicked
+        
+        // Handle array of keys (OR logic)
+        if (Array.isArray(key)) {
+          return key.some(k => keyClickedFunc(k));
+        }
+        
         // Check if the specified key is in the clickedKeys set (supports multiple keys)
-        const normalizedKey = key.trim();
+        const normalizedKey = String(key).trim();
         for (const clicked of clickedKeys) {
           if (clicked === normalizedKey || clicked.toLowerCase() === normalizedKey.toLowerCase()) {
             return true;

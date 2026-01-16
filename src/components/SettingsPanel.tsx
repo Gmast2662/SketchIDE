@@ -29,6 +29,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
     return saved ? JSON.parse(saved) : { width: 400, height: 300 };
   });
 
+  // Apply theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('sketchide-theme') as Theme;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
   // Apply theme
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

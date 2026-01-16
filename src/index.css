@@ -6,6 +6,17 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
+    /* Default theme colors (dark) */
+    --ide-bg: #1e1e1e;
+    --ide-panel: #252526;
+    --ide-toolbar: #2d2d30;
+    --ide-border: #3e3e42;
+    --ide-text: #cccccc;
+    --ide-textDim: #858585;
+    --ide-accent: #007acc;
+    --ide-success: #4ec9b0;
+    --ide-error: #f48771;
+    --ide-warning: #ce9178;
   }
 
   * {
@@ -32,15 +43,15 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #1e1e1e;
+    background: var(--ide-bg, #1e1e1e);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #424242;
+    background: var(--ide-border, #424242);
     border-radius: 5px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #4e4e4e;
+    background: var(--ide-textDim, #4e4e4e);
   }
 }

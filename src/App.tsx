@@ -21,6 +21,56 @@ import { formatCode } from './lib/formatter';
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const interpreterRef = useRef<CodeInterpreter | null>(null);
+  
+  // Apply saved theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('sketchide-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // Apply theme colors
+    if (savedTheme === 'processing-dark') {
+      document.documentElement.style.setProperty('--ide-bg', '#2b2b2b');
+      document.documentElement.style.setProperty('--ide-panel', '#3c3f41');
+      document.documentElement.style.setProperty('--ide-toolbar', '#515658');
+      document.documentElement.style.setProperty('--ide-text', '#bbbbbb');
+      document.documentElement.style.setProperty('--ide-textDim', '#808080');
+      document.documentElement.style.setProperty('--ide-border', '#515658');
+      document.documentElement.style.setProperty('--ide-accent', '#4a9eff');
+      document.documentElement.style.setProperty('--ide-success', '#6a8759');
+      document.documentElement.style.setProperty('--ide-error', '#cc7832');
+    } else if (savedTheme === 'processing-light') {
+      document.documentElement.style.setProperty('--ide-bg', '#ffffff');
+      document.documentElement.style.setProperty('--ide-panel', '#f5f5f5');
+      document.documentElement.style.setProperty('--ide-toolbar', '#e8e8e8');
+      document.documentElement.style.setProperty('--ide-text', '#000000');
+      document.documentElement.style.setProperty('--ide-textDim', '#666666');
+      document.documentElement.style.setProperty('--ide-border', '#d0d0d0');
+      document.documentElement.style.setProperty('--ide-accent', '#0066cc');
+      document.documentElement.style.setProperty('--ide-success', '#008000');
+      document.documentElement.style.setProperty('--ide-error', '#cc0000');
+    } else if (savedTheme === 'light') {
+      document.documentElement.style.setProperty('--ide-bg', '#ffffff');
+      document.documentElement.style.setProperty('--ide-panel', '#f8f9fa');
+      document.documentElement.style.setProperty('--ide-toolbar', '#e9ecef');
+      document.documentElement.style.setProperty('--ide-text', '#212529');
+      document.documentElement.style.setProperty('--ide-textDim', '#6c757d');
+      document.documentElement.style.setProperty('--ide-border', '#dee2e6');
+      document.documentElement.style.setProperty('--ide-accent', '#0d6efd');
+      document.documentElement.style.setProperty('--ide-success', '#198754');
+      document.documentElement.style.setProperty('--ide-error', '#dc3545');
+    } else {
+      // Default dark theme
+      document.documentElement.style.setProperty('--ide-bg', '#1e1e1e');
+      document.documentElement.style.setProperty('--ide-panel', '#252526');
+      document.documentElement.style.setProperty('--ide-toolbar', '#2d2d30');
+      document.documentElement.style.setProperty('--ide-text', '#cccccc');
+      document.documentElement.style.setProperty('--ide-textDim', '#858585');
+      document.documentElement.style.setProperty('--ide-border', '#3e3e42');
+      document.documentElement.style.setProperty('--ide-accent', '#007acc');
+      document.documentElement.style.setProperty('--ide-success', '#4ec9b0');
+      document.documentElement.style.setProperty('--ide-error', '#f48771');
+    }
+  }, []);
 
   const [code, setCode] = useState(() => {
     // Try to load auto-saved code or use default
@@ -508,8 +558,10 @@ function App() {
         
         // Processing-like structure: folderName/folderName.art
         const filePath = result.filePath;
-        const folderPath = result.folderPath || filePath.substring(0, filePath.lastIndexOf('/') || filePath.lastIndexOf('\\'));
-        const fileName = result.fileName || (folderPath ? folderPath.split(/[/\\]/).pop() : 'sketch');
+        const folderPath = result.folderPath || filePath.substring(0, Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\')));
+        // Extract folder name from path
+        const pathParts = folderPath ? folderPath.split(/[/\\]/) : filePath.split(/[/\\]/);
+        const fileName = result.fileName || pathParts[pathParts.length - 1] || 'sketch';
         
         // Write the code file
         await (window as any).electronAPI.writeFile(filePath, code);
