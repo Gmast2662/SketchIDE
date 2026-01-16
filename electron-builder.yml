@@ -31,8 +31,8 @@ win:
   sign: null
   # Windows file properties - "Company" field (label cannot be changed)
   # Note: Windows always shows "Company" label - we cannot change it to "Owner/Creator"
-  # Setting companyName ensures it shows "Avi" in the Company field
-  companyName: Avi
+  # publisherName sets the value that appears in the Company field
+  publisherName: Avi
 
 mac:
   target:

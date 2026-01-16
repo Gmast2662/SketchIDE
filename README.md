@@ -6,11 +6,17 @@ A modern, beginner-friendly coding environment for visual programming, inspired 
 
 **Copyright © 2026 Avi. All rights reserved.**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** - see the [LICENSE](LICENSE) file for details.
 
 **Terms of Service:** By using SketchIDE, you agree to the [Terms of Service](TERMS_OF_SERVICE.md).
 
-**Note:** MIT License allows free use, modification, and commercial use. If you prefer a more restrictive license that prevents unauthorized commercial use or redistribution, see [LICENSE_PROPRIETARY.md](LICENSE_PROPRIETARY.md) for an alternative proprietary license option.
+**License Summary:**
+- ✅ **Free to use** - Use the software for any purpose
+- ✅ **Free to modify** - Modify the source code as needed
+- ✅ **Free to distribute** - Share the software with others
+- ✅ **Source code available** - Access to full source code
+- ⚠️ **Copyleft** - Modified versions must also be GPL-3.0 (open source)
+
 
 ## Features
 
@@ -41,7 +47,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **Note about "Windows protected your PC" warning:**
 - This warning appears because the app is not code-signed (code signing certificates cost $100-500/year)
 - The app is safe - click "More info" → "Run anyway" to proceed
-- This is normal for unsigned free software (see [CODE_SIGNING_INFO.md](CODE_SIGNING_INFO.md) for details)
+- This is normal for unsigned free software
 
 ### Portable Version
 1. Extract `win-unpacked` folder
@@ -162,15 +168,15 @@ The app automatically notifies you when updates are available. Updates are check
 
 **Copyright © 2026 Avi. All rights reserved.**
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** - see the [LICENSE](LICENSE) file for details.
 
 **Terms of Service:** Please review the [Terms of Service](TERMS_OF_SERVICE.md) before using SketchIDE.
 
-**Important:** The MIT License allows:
-- ✅ Free use
-- ✅ Modification
-- ✅ Commercial use (including selling)
-- ✅ Distribution
+**License Terms:**
+- ✅ Free to use, modify, and distribute
+- ✅ Source code available
+- ⚠️ Modified versions must also be GPL-3.0 (open source)
+
 
 ## 🤝 Contributing
 
