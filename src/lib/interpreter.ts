@@ -57,10 +57,16 @@ export class CodeInterpreter {
       let currentStrokeColor = 'black';
       let currentStrokeWeight = 1;
 
+      // Canvas width and height variables (like Processing)
+      let canvasWidth = canvas.width;
+      let canvasHeight = canvas.height;
+      
       // Size function to change canvas dimensions
       const size = (w: number, h: number) => {
         canvas.width = w;
         canvas.height = h;
+        canvasWidth = w;
+        canvasHeight = h;
         if (this.context.onResize) {
           this.context.onResize(w, h);
         }
@@ -494,11 +500,19 @@ export class CodeInterpreter {
           ctx.fillStyle = currentFillColor; // Use the fill color set by fill()
         }
         ctx.fillRect(x, y, w, h);
-        // Draw text in black
+        
+        // Draw button border for visibility
+        ctx.strokeStyle = 'rgba(100, 100, 100, 1)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, w, h);
+        
+        // Draw text in black (or contrasting color)
         ctx.fillStyle = 'rgba(0, 0, 0, 1)';
         ctx.font = '14px monospace';
         ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
         ctx.fillText(id, x + 10, y + h/2);
+        
         // Restore original fill color for subsequent drawing
         ctx.fillStyle = savedFillStyle;
         currentFillColor = savedFillColor;
@@ -768,7 +782,9 @@ export class CodeInterpreter {
             .replace(/\bkeyPressed\b(?!\()/g, 'getKeyPressed()')
             .replace(/\bkeyClicked\b(?!\()/g, 'getKeyClicked()')
             .replace(/\bclickedKey\b/g, 'getClickedKey()')
-            .replace(/\bkey\b(?!\w)/g, 'getKey()');
+            .replace(/\bkey\b(?!\w)/g, 'getKey()')
+            .replace(/\bwidth\b(?!\w)/g, 'getWidth()')
+            .replace(/\bheight\b(?!\w)/g, 'getHeight()');
           
           // Restore strings
           strPlaceholders.forEach((str, i) => {
@@ -829,6 +845,8 @@ export class CodeInterpreter {
         () => currentKey,
         () => keyClicked,
         () => clickedKey,
+        () => canvasWidth,
+        () => canvasHeight,
         isKeyPressed,
         isLeftMouse,
         isRightMouse,

@@ -386,6 +386,13 @@ function App() {
           setCanvasSize({ width: 400, height: 300 });
         }
       }
+      // Focus the code editor after a short delay
+      setTimeout(() => {
+        const textarea = document.querySelector('textarea.code-editor-textarea') as HTMLTextAreaElement;
+        if (textarea) {
+          textarea.focus();
+        }
+      }, 100);
     }
   }, [handleStop, handleClearConsole]);
 
@@ -436,16 +443,16 @@ function App() {
         // Processing-like structure: folderName/folderName.art
         const filePath = result.filePath;
         const folderPath = result.folderPath || filePath.substring(0, filePath.lastIndexOf('/') || filePath.lastIndexOf('\\'));
+        const fileName = result.fileName || (folderPath ? folderPath.split(/[/\\]/).pop() : 'sketch');
         
+        // Write the code file
         await (window as any).electronAPI.writeFile(filePath, code);
         setCurrentFilePath(filePath);
         
-        // Update project info - extract folder name from path
-        const pathParts = folderPath ? folderPath.split(/[/\\]/) : filePath.split(/[/\\]/);
-        const folderName = pathParts[pathParts.length - 1];
+        // Update project info
         const project: Project = {
           id: currentProject?.id || Date.now().toString(),
-          name: folderName,
+          name: fileName,
           code,
           createdAt: currentProject?.createdAt || Date.now(),
           updatedAt: Date.now(),
@@ -455,7 +462,7 @@ function App() {
         storage.setCurrentProjectId(project.id);
         setCurrentProject(project);
         
-        addConsoleMessage(`Saved to ${folderName}/`, 'success');
+        addConsoleMessage(`Saved to ${fileName}/`, 'success');
       } catch (error) {
         addConsoleMessage('Error saving file', 'error');
       }
@@ -489,7 +496,7 @@ function App() {
     if (isElectron) {
       try {
         const sketchbookPath = await (window as any).electronAPI.getSketchbookPath();
-        const defaultName = currentProject?.name || 'Untitled Project';
+        const defaultName = currentProject?.name || 'sketch_' + new Date().toISOString().slice(0, 10).replace(/-/g, '');
         const defaultPath = `${sketchbookPath}/${defaultName}.art`;
         
         const result = await (window as any).electronAPI.showSaveDialog({
@@ -502,16 +509,16 @@ function App() {
         // Processing-like structure: folderName/folderName.art
         const filePath = result.filePath;
         const folderPath = result.folderPath || filePath.substring(0, filePath.lastIndexOf('/') || filePath.lastIndexOf('\\'));
+        const fileName = result.fileName || (folderPath ? folderPath.split(/[/\\]/).pop() : 'sketch');
         
+        // Write the code file
         await (window as any).electronAPI.writeFile(filePath, code);
         setCurrentFilePath(filePath);
         
-        // Update project info - extract folder name from path
-        const pathParts = folderPath ? folderPath.split(/[/\\]/) : filePath.split(/[/\\]/);
-        const folderName = pathParts[pathParts.length - 1];
+        // Update project info
         const project: Project = {
           id: Date.now().toString(), // New ID for save as
-          name: folderName,
+          name: fileName,
           code,
           createdAt: Date.now(),
           updatedAt: Date.now(),
@@ -521,7 +528,7 @@ function App() {
         storage.setCurrentProjectId(project.id);
         setCurrentProject(project);
         
-        addConsoleMessage(`Saved as ${folderName}/`, 'success');
+        addConsoleMessage(`Saved as ${fileName}/`, 'success');
       } catch (error) {
         addConsoleMessage('Error saving file', 'error');
       }

@@ -193,11 +193,28 @@ ipcMain.handle('show-save-dialog', async (event, options) => {
   if (!win) return { canceled: true };
   
   try {
-    // Use showSaveDialog to let user enter folder name
-    // This allows creating a new folder
+    // Get sketchbook path
+    const sketchbookPath = await new Promise((resolve) => {
+      const appPath = app.isPackaged ? path.dirname(process.execPath) : path.join(__dirname, '..');
+      resolve(path.join(appPath, 'sketchbook'));
+    });
+    
+    // Extract default name from defaultPath if provided
+    let defaultName = 'sketch_' + new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    if (options.defaultPath) {
+      const pathParts = options.defaultPath.split(/[/\\]/);
+      const lastPart = pathParts[pathParts.length - 1];
+      if (lastPart && !lastPart.includes('.')) {
+        defaultName = lastPart;
+      } else if (lastPart) {
+        defaultName = path.basename(lastPart, '.art');
+      }
+    }
+    
+    // Use showSaveDialog to let user enter sketch name
     const result = await dialog.showSaveDialog(win, {
       title: options.title || 'Save Sketch',
-      defaultPath: options.defaultPath,
+      defaultPath: path.join(sketchbookPath, defaultName + '.art'),
       filters: [
         { name: 'Sketch Files', extensions: ['art'] },
         { name: 'All Files', extensions: ['*'] },
