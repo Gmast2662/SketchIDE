@@ -55,7 +55,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       items: [
         { label: 'Documentation', shortcut: '', action: onShowHelp },
         { label: 'Examples', shortcut: '', action: onShowExamples },
-        { label: 'Terms & License', shortcut: '', action: onShowTerms },
+        { label: 'GitHub', shortcut: '', action: () => window.open('https://github.com/Gmast2662/SketchIDE', '_blank') },
       ],
     },
     {

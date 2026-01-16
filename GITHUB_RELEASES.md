@@ -15,7 +15,7 @@ This guide explains how to create and manage releases for SketchIDE using GitHub
 ```bash
 # Create a release with a single file
 gh release create v1.0.3 "release/SketchIDE Setup 1.0.3.exe" \
-  -- title "Version 1.0.3" \
+  --title "Version 1.0.3" \
   --notes "New update and canvas reseting and license and .md updates and saving system."
 ```
 
@@ -43,18 +43,31 @@ gh release create v1.0.2 "release/SketchIDE Setup 1.0.2.exe" \
 
 If a release already exists and you want to add or update files:
 
-```bash
+**PowerShell:**
+```powershell
 # Upload a single file (replaces if exists)
-gh release upload v1.0.2 "release/SketchIDE Setup 1.0.2.exe" --clobber
+gh release upload v1.0.3 "release/SketchIDE Setup 1.0.3.exe" --clobber
 
 # Upload multiple files
-gh release upload v1.0.2 \
-  "release/SketchIDE Setup 1.0.2.exe" \
+gh release upload v1.0.3 "release/SketchIDE Setup 1.0.3.exe" "release/other-file.zip" --clobber
+
+# Upload all files from a directory
+gh release upload v1.0.3 release/*.exe --clobber
+```
+
+**Bash:**
+```bash
+# Upload a single file (replaces if exists)
+gh release upload v1.0.3 "release/SketchIDE Setup 1.0.3.exe" --clobber
+
+# Upload multiple files
+gh release upload v1.0.3 \
+  "release/SketchIDE Setup 1.0.3.exe" \
   "release/other-file.zip" \
   --clobber
 
 # Upload all files from a directory
-gh release upload v1.0.2 release/*.exe --clobber
+gh release upload v1.0.3 release/*.exe --clobber
 ```
 
 **Important Flags:**
@@ -98,23 +111,23 @@ gh release edit v1.0.2 --notes "Updated release notes"
 ## Workflow Example
 
 1. **Build the app:**
-   ```bash
+   ```powershell
    npm run electron:build:win
    ```
 
 2. **Find the installer:**
-   - Location: `release/SketchIDE Setup 1.0.2.exe`
+   - Location: `release/SketchIDE Setup 1.0.3.exe` (version from package.json)
 
-3. **Create or update release:**
-   ```bash
+3. **Create or update release (PowerShell):**
+   ```powershell
    # If release doesn't exist
-   gh release create v1.0.2 "release/SketchIDE Setup 1.0.2.exe" \
-     --title "SketchIDE v1.0.2" \
-     --notes "Bug fixes and improvements"
+   gh release create v1.0.3 "release/SketchIDE Setup 1.0.3.exe" --title "SketchIDE v1.0.3" --notes "Bug fixes and improvements"
    
    # If release exists, upload to it
-   gh release upload v1.0.2 "release/SketchIDE Setup 1.0.2.exe" --clobber
+   gh release upload v1.0.3 "release/SketchIDE Setup 1.0.3.exe" --clobber
    ```
+
+**Note:** Replace `1.0.3` with your actual version from `package.json`.
 
 ## Troubleshooting
 
@@ -137,8 +150,10 @@ gh release edit v1.0.2 --notes "Updated release notes"
 
 ## Tips
 
-- Always use semantic versioning (e.g., `v1.0.2`)
+- Always use semantic versioning (e.g., `v1.0.3`) - match your `package.json` version
 - Include release notes describing changes
 - Tag releases immediately after building
 - Test the installer before uploading
 - Keep release notes in a `CHANGELOG.md` file for consistency
+- **PowerShell users:** Don't use backslashes (\) for line continuation - use single-line commands
+- **Version sync:** The installer name uses the version from `package.json` automatically

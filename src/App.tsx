@@ -33,7 +33,6 @@ function App() {
   const [showProjects, setShowProjects] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
   const [errorLine, setErrorLine] = useState<number | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 400, height: 300 });
   const [hasSeenWelcome, setHasSeenWelcome] = useState(() => {
@@ -646,7 +645,7 @@ function App() {
         onShowHelp={() => setShowHelp(true)}
         onShowExamples={() => setShowExamples(true)}
         onShowSettings={() => setShowSettings(true)}
-        onShowTerms={() => setShowTerms(true)}
+        onShowTerms={() => window.open('https://github.com/Gmast2662/SketchIDE', '_blank')}
       />
 
       {/* Toolbar */}
@@ -758,7 +757,6 @@ function App() {
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
-      {showTerms && <TermsPanel onClose={() => setShowTerms(false)} />}
 
       {/* Update Notification */}
       {showUpdateNotification && latestVersion && (

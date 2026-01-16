@@ -460,8 +460,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
-          className="w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none leading-[1.5] overflow-auto relative z-10"
-          style={{ caretColor: '#CCCCCC' }}
+          className="code-editor-textarea w-full h-full px-4 py-4 bg-transparent text-transparent caret-white outline-none resize-none leading-[1.5] overflow-auto relative z-10"
+          style={{ 
+            caretColor: '#CCCCCC',
+            fontFamily: 'var(--editor-font-family, monospace)',
+            fontSize: 'var(--editor-font-size, 14px)'
+          }}
           spellCheck={false}
           autoComplete="off"
           autoCorrect="off"

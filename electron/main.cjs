@@ -192,48 +192,59 @@ ipcMain.handle('show-save-dialog', async (event, options) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   if (!win) return { canceled: true };
   
-  // For Processing-like saves, we need to select/create a folder
-  // First show a dialog to get the folder name
-  const folderResult = await dialog.showSaveDialog(win, {
-    title: options.title || 'Save Sketch',
-    defaultPath: options.defaultPath,
-    filters: [
-      { name: 'Sketch Folders', extensions: [''] }, // No extension for folders
-      { name: 'All Files', extensions: ['*'] },
-    ],
-    buttonLabel: 'Select Folder',
-  });
-  
-  if (folderResult.canceled || !folderResult.filePath) {
-    return { canceled: true };
-  }
-  
-  // Extract folder path and name
-  let folderPath = folderResult.filePath;
-  // Remove extension if user added one
-  if (folderPath.endsWith('.art')) {
-    folderPath = folderPath.replace(/\.art$/, '');
-  }
-  
-  // Create folder structure: folderName/folderName.art and folderName/data/
-  const folderName = path.basename(folderPath);
-  const sketchFilePath = path.join(folderPath, `${folderName}.art`);
-  const dataFolderPath = path.join(folderPath, 'data');
-  
-  // Ensure folders exist
   try {
-    await fs.mkdir(folderPath, { recursive: true });
-    await fs.mkdir(dataFolderPath, { recursive: true });
+    // For Processing-like saves, we need to select/create a folder
+    // Use showOpenDialog with openDirectory to select a folder
+    const folderResult = await dialog.showOpenDialog(win, {
+      title: options.title || 'Save Sketch - Select Folder',
+      defaultPath: options.defaultPath ? path.dirname(options.defaultPath) : undefined,
+      properties: ['openDirectory', 'createDirectory'],
+      buttonLabel: 'Select Folder',
+    });
+    
+    if (folderResult.canceled || !folderResult.filePaths || folderResult.filePaths.length === 0) {
+      return { canceled: true };
+    }
+    
+    // Get the selected folder path
+    let folderPath = folderResult.filePaths[0];
+    
+    // If user selected a folder, get the folder name from the default path if provided
+    // Otherwise prompt for folder name
+    let folderName = path.basename(folderPath);
+    
+    // If defaultPath was provided with a filename, use that as the folder name
+    if (options.defaultPath) {
+      const defaultBasename = path.basename(options.defaultPath, '.art');
+      if (defaultBasename && defaultBasename !== 'Untitled Project') {
+        folderName = defaultBasename;
+        // Create new folder with that name
+        folderPath = path.join(folderPath, folderName);
+      }
+    }
+    
+    // Create folder structure: folderName/folderName.art and folderName/data/
+    const sketchFilePath = path.join(folderPath, `${folderName}.art`);
+    const dataFolderPath = path.join(folderPath, 'data');
+    
+    // Ensure folders exist
+    try {
+      await fs.mkdir(folderPath, { recursive: true });
+      await fs.mkdir(dataFolderPath, { recursive: true });
+    } catch (error) {
+      console.error('Error creating sketch folder structure:', error);
+      return { canceled: true, error: error.message };
+    }
+    
+    return {
+      canceled: false,
+      filePath: sketchFilePath, // Return path to .art file
+      folderPath: folderPath, // Also return folder path
+    };
   } catch (error) {
-    console.error('Error creating sketch folder structure:', error);
+    console.error('Error in show-save-dialog:', error);
     return { canceled: true, error: error.message };
   }
-  
-  return {
-    canceled: false,
-    filePath: sketchFilePath, // Return path to .art file
-    folderPath: folderPath, // Also return folder path
-  };
 });
 
 // Show open dialog (for Processing-like folder structure)

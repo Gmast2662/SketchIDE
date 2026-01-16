@@ -8,7 +8,7 @@ A modern, beginner-friendly coding environment for visual programming, inspired 
 
 This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** - see the [LICENSE](LICENSE) file for details.
 
-**Terms of Service:** By using SketchIDE, you agree to the [Terms of Service](TERMS_OF_SERVICE.md).
+**Terms of Service:** By using SketchIDE, you agree to the [Terms of Service](TERMS_OF_SERVICE.md). You can also view it in the app under **Help → Terms & License**.
 
 **License Summary:**
 - ✅ **Free to use** - Use the software for any purpose

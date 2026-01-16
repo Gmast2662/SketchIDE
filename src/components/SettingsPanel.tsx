@@ -34,10 +34,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
 
   // Apply font family
   useEffect(() => {
-    document.documentElement.style.setProperty('--editor-font-family', 
-      fontFamily === 'monospace' ? 'monospace' :
-      fontFamily === 'sans-serif' ? 'sans-serif' : 'serif'
-    );
+    const fontValue = fontFamily === 'monospace' ? 'monospace' :
+      fontFamily === 'sans-serif' ? 'sans-serif' : 'serif';
+    document.documentElement.style.setProperty('--editor-font-family', fontValue);
+    // Apply directly to all code editor textareas
+    const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
+    editorTextareas.forEach(textarea => {
+      textarea.style.fontFamily = fontValue;
+    });
     localStorage.setItem('sketchide-font-family', fontFamily);
   }, [fontFamily]);
 
@@ -48,7 +52,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       medium: '14px',
       large: '16px',
     };
-    document.documentElement.style.setProperty('--editor-font-size', sizeMap[fontSize]);
+    const sizeValue = sizeMap[fontSize];
+    document.documentElement.style.setProperty('--editor-font-size', sizeValue);
+    // Apply directly to all code editor textareas
+    const editorTextareas = document.querySelectorAll('textarea.code-editor-textarea') as NodeListOf<HTMLTextAreaElement>;
+    editorTextareas.forEach(textarea => {
+      textarea.style.fontSize = sizeValue;
+    });
     localStorage.setItem('sketchide-font-size', fontSize);
   }, [fontSize]);
 
