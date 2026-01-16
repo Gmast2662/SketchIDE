@@ -65,17 +65,13 @@ These Terms are effective until terminated. Your rights under these Terms will t
 - Cease all use of the Software
 - Destroy all copies of the Software in your possession
 
-## 11. Governing Law
-
-These Terms shall be governed by and construed in accordance with the laws of [Your Jurisdiction], without regard to its conflict of law provisions.
-
-## 12. Contact Information
+## 11. Contact Information
 
 For questions about these Terms, please contact:
-- Email: [Your Email]
+- Email: avi1srcs+SketchIDE@gmail.com
 - GitHub: https://github.com/Gmast2662/SketchIDE
 
-## 13. Acknowledgment
+## 12. Acknowledgment
 
 By using SketchIDE, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
 
