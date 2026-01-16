@@ -255,6 +255,8 @@ ipcMain.handle('show-save-dialog', async (event, options) => {
       canceled: false,
       filePath: sketchFilePath, // Return path to .art file
       folderPath: sketchFolderPath, // Also return folder path
+      fileName: fileName, // Return the file name without extension
+      success: true,
     };
   } catch (error) {
     console.error('Error in show-save-dialog:', error);

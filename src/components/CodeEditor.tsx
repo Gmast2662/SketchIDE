@@ -7,6 +7,7 @@ interface CodeEditorProps {
   onChange: (value: string) => void;
   readOnly?: boolean;
   errorLine?: number | null;
+  errorMessages?: Array<{line: number; message: string}>;
 }
 
 const highlightSyntax = (
@@ -377,10 +378,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         {Array.from({ length: lineCount }, (_, i) => {
           const lineNum = i + 1;
           const isError = errorLine !== null && errorLine === lineNum;
+          const errorMsg = errorMessages?.find(e => e.line === lineNum);
           return (
             <div
               key={lineNum}
               className={`${isError ? 'text-ide-error font-bold' : ''}`}
+              title={errorMsg ? errorMsg.message : ''}
               style={{
                 lineHeight: '1.5',
                 height: '1.5em',
@@ -415,6 +418,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           {value.split('\n').map((line, i) => {
             const lineNum = i + 1;
             const isError = errorLine !== null && errorLine === lineNum;
+            const errorMsg = errorMessages?.find(e => e.line === lineNum);
             
             // Get cursor position and calculate line start position
             const textarea = textareaRef.current;
@@ -479,6 +483,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               <div
                 key={i}
                 className={`${isError ? 'bg-red-900/30' : ''}`}
+                title={errorMsg ? errorMsg.message : ''}
                 style={{
                   height: '1.5em',
                   lineHeight: '1.5',
@@ -489,6 +494,9 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
                   margin: '0',
                   padding: '0',
                   display: 'block',
+                  backgroundColor: isError ? 'rgba(244, 135, 113, 0.2)' : 'transparent',
+                  borderLeft: isError ? '3px solid #f48771' : 'none',
+                  paddingLeft: isError ? '1px' : '0px',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word'
                 }}

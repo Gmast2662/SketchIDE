@@ -17,6 +17,7 @@ import { storage } from './lib/storage';
 import { DEFAULT_CODE } from './constants/examples';
 import type { ConsoleMessage, Project, Example } from './types';
 import { formatCode } from './lib/formatter';
+import { analyzeCode } from './lib/codeAnalyzer';
 
 function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -123,6 +124,25 @@ function App() {
     
     return () => clearTimeout(autoSaveTimer);
   }, [code, currentFilePath]);
+
+  // Real-time error detection
+  useEffect(() => {
+    if (!code.trim()) {
+      setRealTimeErrors([]);
+      setErrorLine(null);
+      return;
+    }
+
+    const errors = analyzeCode(code);
+    setRealTimeErrors(errors);
+    
+    // Highlight first error line
+    if (errors.length > 0) {
+      setErrorLine(errors[0].line);
+    } else {
+      setErrorLine(null);
+    }
+  }, [code]);
 
   // Check for updates from GitHub Releases
   useEffect(() => {
@@ -492,11 +512,35 @@ function App() {
         
         // Processing-like structure: folderName/folderName.art
         const filePath = result.filePath;
-        const folderPath = result.folderPath || filePath.substring(0, filePath.lastIndexOf('/') || filePath.lastIndexOf('\\'));
-        const fileName = result.fileName || (folderPath ? folderPath.split(/[/\\]/).pop() : 'sketch');
+        // Extract folder path properly
+        let folderPath = result.folderPath;
+        if (!folderPath && filePath) {
+          const lastSep = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'));
+          folderPath = lastSep > 0 ? filePath.substring(0, lastSep) : '';
+        }
+        // Extract fileName from result or folder path
+        let fileName = result.fileName;
+        if (!fileName && folderPath) {
+          const pathParts = folderPath.split(/[/\\]/);
+          fileName = pathParts[pathParts.length - 1] || 'sketch';
+        } else if (!fileName && filePath) {
+          // Extract from file path
+          const pathParts = filePath.split(/[/\\]/);
+          const lastPart = pathParts[pathParts.length - 1];
+          fileName = lastPart.replace(/\.art$/, '') || 'sketch';
+        } else if (!fileName) {
+          fileName = 'sketch';
+        }
+        
+        console.log('Saving to:', filePath, 'fileName:', fileName, 'folderPath:', folderPath);
         
         // Write the code file
-        await (window as any).electronAPI.writeFile(filePath, code);
+        const writeResult = await (window as any).electronAPI.writeFile(filePath, code);
+        if (!writeResult || !writeResult.success) {
+          console.error('Write file failed:', writeResult);
+          addConsoleMessage('Error writing file', 'error');
+          return;
+        }
         setCurrentFilePath(filePath);
         
         // Update project info

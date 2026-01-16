@@ -319,6 +319,7 @@ export class CodeInterpreter {
       let keyClicked = false; // True for one frame after key press
       let clickedKeys = new Set<string>(); // Track all keys that were just clicked (supports multiple keys)
       let clickedKey: string | null = null; // The most recently clicked key
+      let keyJustClicked = false; // Track if key was JUST clicked this frame (not held from previous frame)
       
       // Set up mouse and keyboard event listeners
       const handleMouseMove = (e: MouseEvent) => {
@@ -348,9 +349,10 @@ export class CodeInterpreter {
         const isNewPress = !pressedKeys.has(e.key);
         
         if (isNewPress) {
-          // Add to clicked keys set (for multi-key detection)
+          // Only set keyClicked if this is a brand new press
           clickedKeys.add(e.key);
           keyClicked = true;
+          keyJustClicked = true;
           clickedKey = e.key;
         }
         
@@ -423,8 +425,9 @@ export class CodeInterpreter {
       // Check if a key was clicked (one-time key press)
       // Supports multiple keys: keyClicked("a") || keyClicked("b")
       const keyClickedFunc = (key?: string | string[]): boolean => {
-        if (!keyClicked) return false;
-        if (!key) return keyClicked; // If no key specified, return if any key was clicked
+        // Only return true if key was JUST clicked this frame, not held
+        if (!keyJustClicked || !keyClicked) return false;
+        if (!key) return keyJustClicked && keyClicked; // If no key specified, return if any key was just clicked
         
         // Handle array of keys (OR logic)
         if (Array.isArray(key)) {
@@ -887,6 +890,7 @@ export class CodeInterpreter {
       
       // Function to reset keyClicked state after it's been processed
       const resetKeyClicked = () => {
+        keyJustClicked = false; // Reset the "just clicked" flag first
         keyClicked = false;
         clickedKeys.clear(); // Clear all clicked keys
         clickedKey = null;
@@ -916,6 +920,13 @@ export class CodeInterpreter {
       if (this.stopRequested || !this.loopFunction) return;
 
       try {
+        // Reset keyClicked at START of frame (before loop executes)
+        // This ensures keyClicked only works for ONE frame after key press
+        // keyJustClicked flag tracks if key was pressed THIS frame
+        if ((this as any).resetKeyClicked) {
+          (this as any).resetKeyClicked();
+        }
+        
         // Clear button states at start of frame
         if ((this as any).clearButtons) {
           (this as any).clearButtons();
@@ -930,12 +941,6 @@ export class CodeInterpreter {
           // If loop is async and returns a promise, await it
           // But don't wait for delay() - it's already non-blocking via setTimeout
           await result;
-        }
-        
-        // Reset keyClicked AFTER loop executes (so it's available during the frame)
-        // This prevents it from being reset before the code can check it
-        if ((this as any).resetKeyClicked) {
-          (this as any).resetKeyClicked();
         }
         
         // Schedule next frame - this keeps the animation loop running
