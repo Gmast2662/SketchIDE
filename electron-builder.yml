@@ -1,6 +1,11 @@
 appId: com.sketchide.app
 productName: SketchIDE
-copyright: Copyright © 2024
+copyright: Copyright © 2026 Avi. All rights reserved.
+author:
+  name: Avi
+  email: ''
+# Publisher/Creator name (shows as "Creator" or "Owner" in file properties)
+publisherName: Avi
 
 directories:
   buildResources: build
@@ -13,6 +18,8 @@ files:
   - node_modules/**/*
 
 win:
+  # Publisher name (shows in file properties)
+  publisherName: Avi
   target:
     - target: dir
       arch:
@@ -56,3 +63,9 @@ nsis:
   deleteAppDataOnUninstall: false
   # Don't try to close running instances (allows installation if app is running)
   perMachine: false
+  # Installation instructions
+  installDir: '$PROGRAMFILES64\${productName}'
+  # Welcome page text
+  welcomePageText: 'Welcome to the ${productName} Setup Wizard.\r\n\r\nThis will install ${productName} on your computer.\r\n\r\n⚠️ IMPORTANT: If installing to Program Files (default), you must run this installer as Administrator. Right-click the installer and select "Run as administrator".\r\n\r\nClick Next to continue.'
+  # Finish page text
+  finishPageText: '${productName} has been installed on your computer.\r\n\r\nClick Finish to close this wizard.'

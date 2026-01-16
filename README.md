@@ -26,9 +26,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Installation
 
 ### Windows
+
+**⚠️ IMPORTANT:**
+- **Default Installation (Program Files):** You must **run the installer as Administrator**. Right-click the installer and select "Run as administrator".
+- **Custom Location:** If you choose a custom installation folder (like your user folder), you don't need admin rights.
+
+**Installation Steps:**
 1. Download `SketchIDE Setup 1.#.#.exe` from the releases
-2. Run the installer
-3. Launch SketchIDE from the Start Menu or desktop shortcut
+2. **Right-click the installer** → Select **"Run as administrator"**
+   - OR choose a custom folder (like `C:\Users\YourName\SketchIDE`) to avoid needing admin rights
+3. Follow the installation wizard
+4. Launch SketchIDE from the Start Menu or desktop shortcut
+
+**Note about "Windows protected your PC" warning:**
+- This warning appears because the app is not code-signed (code signing certificates cost $100-500/year)
+- The app is safe - click "More info" → "Run anyway" to proceed
+- This is normal for unsigned free software (see [CODE_SIGNING_INFO.md](CODE_SIGNING_INFO.md) for details)
 
 ### Portable Version
 1. Extract `win-unpacked` folder
