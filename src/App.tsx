@@ -98,7 +98,7 @@ function App() {
     if (import.meta.env.VITE_APP_VERSION) return import.meta.env.VITE_APP_VERSION;
     // Fallback - should not be needed in production as Vite injects version
     // In dev mode, this ensures we have a version
-    return '1.0.3'; // Fallback - update this if package.json version changes significantly
+    return '1.0.4'; // Fallback - update this if package.json version changes significantly
   };
   const currentVersion = getCurrentVersion() as string;
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null); // Track saved file path

@@ -39,9 +39,7 @@ git add .
 
 ```bash
 # Create a release with a single file
-gh release create v1.0.4 "release/SketchIDE Setup 1.0.4.exe" \
-  --title "Version 1.0.4" \
-  --notes "Add later"
+gh release create v1.0.4 "release/SketchIDE Setup 1.0.4.exe" --title "Version 1.0.4" --notes "Add later"
 ```
 
 ### Release with Multiple Files

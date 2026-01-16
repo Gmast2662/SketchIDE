@@ -21,10 +21,10 @@ export default defineConfig({
   define: {
     // Read version from package.json at build time (auto-synced)
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(
-      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.3'
+      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.4'
     ),
     '__APP_VERSION__': JSON.stringify(
-      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.3'
+      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.4'
     ),
   },
   build: {

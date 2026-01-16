@@ -128,7 +128,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
       <div className="text-xs text-ide-textDim px-3">
         v{(typeof __APP_VERSION__ !== 'undefined' 
           ? __APP_VERSION__ 
-          : (import.meta.env.VITE_APP_VERSION || '1.0.3')) as string}
+                : (import.meta.env.VITE_APP_VERSION || '1.0.4')) as string}
       </div>
     </div>
   );

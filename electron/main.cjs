@@ -23,6 +23,7 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true,
     },
     icon: path.join(__dirname, '../public/logo.png'), // App icon
     title: 'SketchIDE',
@@ -38,16 +39,70 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     // In production, load from built files
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    // When packaged, __dirname is in resources/app.asar/electron/
+    // dist/ folder is in resources/app.asar/dist/
+    let htmlPath;
+    if (app.isPackaged) {
+      // In packaged app, __dirname is resources/app.asar/electron/
+      // dist is at resources/app.asar/dist/
+      htmlPath = path.join(__dirname, '../dist/index.html');
+    } else {
+      // In development build (after npm run build), __dirname is electron/
+      // dist is at ../dist/
+      htmlPath = path.join(__dirname, '../dist/index.html');
+    }
+    
+    console.log('Loading HTML from:', htmlPath);
+    console.log('__dirname:', __dirname);
+    console.log('isPackaged:', app.isPackaged);
+    
+    // Check if file exists
+    const fs = require('fs');
+    if (!fs.existsSync(htmlPath)) {
+      console.error('HTML file not found at:', htmlPath);
+      // Try alternative paths
+      const altPaths = [
+        path.join(process.resourcesPath, 'app.asar', 'dist', 'index.html'),
+        path.join(process.resourcesPath, 'app', 'dist', 'index.html'),
+        path.join(__dirname, '..', 'index.html'),
+      ];
+      for (const altPath of altPaths) {
+        if (fs.existsSync(altPath)) {
+          console.log('Found HTML at alternative path:', altPath);
+          htmlPath = altPath;
+          break;
+        }
+      }
+    }
+    
+    mainWindow.loadFile(htmlPath).catch((error) => {
+      console.error('Error loading file:', error);
+    });
   }
+
+  // Handle console messages for debugging
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[Console ${level}] ${message}`, line ? `at line ${line}` : '');
+  });
 
   // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    
-    // Focus on window
-    if (isDev) {
-      mainWindow.focus();
+    mainWindow.focus();
+  });
+  
+  // Handle failed page loads
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+    console.error('Failed to load:', errorCode, errorDescription, validatedURL);
+    if (errorCode === -6) { // ERR_FILE_NOT_FOUND
+      mainWindow.webContents.executeJavaScript(`
+        document.body.innerHTML = '<div style="padding: 20px; font-family: monospace; color: red;">
+          <h1>File Not Found</h1>
+          <p>Could not load: ${validatedURL}</p>
+          <p>Expected path: ${path.join(__dirname, '../dist/index.html')}</p>
+          <p>Please rebuild the app with: npm run build</p>
+        </div>';
+      `);
     }
   });
 
