@@ -14,9 +14,9 @@ This guide explains how to create and manage releases for SketchIDE using GitHub
 
 ```bash
 # Create a release with a single file
-gh release create v1.0.2 "release/SketchIDE Setup 1.0.2.exe" \
-  --title "Version 1.0.2" \
-  --notes "Release notes here"
+gh release create v1.0.3 "release/SketchIDE Setup 1.0.3.exe" \
+  -- title "Version 1.0.3" \
+  --notes "New update and canvas reseting and license and .md updates and saving system."
 ```
 
 ### Release with Multiple Files

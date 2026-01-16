@@ -19,12 +19,12 @@ export default defineConfig({
   },
   base: './', // Important for Electron - use relative paths
   define: {
-    // Read version from package.json at build time
+    // Read version from package.json at build time (auto-synced)
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(
-      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.0'
+      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.3'
     ),
     '__APP_VERSION__': JSON.stringify(
-      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.0'
+      process.env.npm_package_version || JSON.parse(readFileSync('./package.json', 'utf-8')).version || '1.0.3'
     ),
   },
   build: {

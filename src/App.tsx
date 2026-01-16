@@ -46,13 +46,9 @@ function App() {
   const getCurrentVersion = () => {
     if (typeof __APP_VERSION__ !== 'undefined') return __APP_VERSION__;
     if (import.meta.env.VITE_APP_VERSION) return import.meta.env.VITE_APP_VERSION;
-    // Try to read from package.json at runtime (dev mode)
-    try {
-      // This won't work in production, but good for dev
-      return '1.0.1'; // Default fallback - should match package.json
-    } catch {
-      return '1.0.1';
-    }
+    // Fallback - should not be needed in production as Vite injects version
+    // In dev mode, this ensures we have a version
+    return '1.0.3'; // Fallback - update this if package.json version changes significantly
   };
   const currentVersion = getCurrentVersion() as string;
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null); // Track saved file path

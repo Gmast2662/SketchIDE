@@ -45,7 +45,6 @@ This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**
 4. Launch SketchIDE from the Start Menu or desktop shortcut
 
 **Note about "Windows protected your PC" warning:**
-- This warning appears because the app is not code-signed (code signing certificates cost $100-500/year)
 - The app is safe - click "More info" → "Run anyway" to proceed
 - This is normal for unsigned free software
 
@@ -160,7 +159,7 @@ Check out the built-in examples from the Help menu to learn:
 
 ## Version
 
-Current version: **1.0.2**
+Current version: **1.0.3**
 
 The app automatically notifies you when updates are available. Updates are checked from: https://github.com/Gmast2662/SketchIDE/releases
 
