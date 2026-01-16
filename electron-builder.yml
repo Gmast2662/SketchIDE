@@ -1,6 +1,11 @@
 appId: com.sketchide.app
 productName: SketchIDE
 copyright: Copyright © 2026 Avi. All rights reserved.
+# File version (must be in format X.X.X.X for Windows)
+extraMetadata:
+  version: 1.0.2.0
+# Build version for Windows executables
+buildVersion: 1.0.2.0
 
 directories:
   buildResources: build
@@ -24,6 +29,10 @@ win:
   requestedExecutionLevel: asInvoker
   # Completely disable code signing to avoid Windows permission issues
   sign: null
+  # Windows file properties - "Company" field (label cannot be changed)
+  # Note: Windows always shows "Company" label - we cannot change it to "Owner/Creator"
+  # Setting companyName ensures it shows "Avi" in the Company field
+  companyName: Avi
 
 mac:
   target:
